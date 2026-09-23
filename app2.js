@@ -68,6 +68,7 @@
       const img = new Image();
       img.onload = () => {
         compressImg = img;
+        compressImg.originalFileSize = file.size;
         compressPreview.src = reader.result;
         compressPreview.style.display = 'block';
         compressBtn.disabled = false;
@@ -123,7 +124,12 @@
     compressResult = best;
 
     resultImg.src = best.durl;
-    let note = `${w}×${h}px · ${best.kb.toFixed(1)} KB`;
+    const originalKB = compressImg.originalFileSize / 1024;
+    const reduction = originalKB > 0 ? ((originalKB - best.kb) / originalKB) * 100 : 0;
+    const reductionText = reduction >= 0
+      ? `Reduced by ${reduction.toFixed(1)}%`
+      : `Increased by ${Math.abs(reduction).toFixed(1)}%`;
+    let note = `${w}×${h}px · ${best.kb.toFixed(1)} KB · ${reductionText} (from ${originalKB.toFixed(1)} KB)`;
     if (best.kb > maxKB) note += ' — could not fit under the max at this quality; try smaller dimensions';
     else if (best.kb < minKB) note += ' — under the suggested minimum; usually fine, but check your portal';
     resultInfo.textContent = note;
