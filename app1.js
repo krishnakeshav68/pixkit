@@ -6,7 +6,7 @@
   const statusEl = document.getElementById('status');
   const pageSizeSel = document.getElementById('pageSize');
 
-  let images = []; // {id, file, url, thumbUrl, w, h}
+  let images = []; // {id, file, url, w, h}
   let idSeq = 0;
 
   drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
@@ -24,7 +24,7 @@
   function handleFiles(fileList) {
     const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
     files.forEach(file => {
-      const entry = { id: idSeq++, file, url: '', thumbUrl: '', w: 0, h: 0 };
+      const entry = { id: idSeq++, file, url: '', w: 0, h: 0 };
       entry.ready = new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -34,21 +34,6 @@
             entry.w = img.naturalWidth || 1000;
             entry.h = img.naturalHeight || 1000;
             entry.img = img;
-            // Keep the original data URL for PDF quality, but use a small
-            // thumbnail in the list to reduce memory/paint work on mobile.
-            try {
-              const maxThumb = 160;
-              const scale = Math.min(1, maxThumb / Math.max(entry.w, entry.h));
-              const tw = Math.max(1, Math.round(entry.w * scale));
-              const th = Math.max(1, Math.round(entry.h * scale));
-              const tc = document.createElement('canvas');
-              tc.width = tw;
-              tc.height = th;
-              tc.getContext('2d').drawImage(img, 0, 0, tw, th);
-              entry.thumbUrl = tc.toDataURL('image/jpeg', 0.72);
-            } catch (_) {
-              entry.thumbUrl = entry.url;
-            }
             resolve();
             render();
           };
@@ -100,7 +85,7 @@
       const item = document.createElement('div');
       item.className = 'item';
       item.innerHTML = `
-        <img src="${entry.thumbUrl || entry.url}" alt="" width="46" height="46" loading="lazy" decoding="async">
+        <img src="${entry.url}" alt="">
         <div class="meta">
           <div class="name">${entry.file.name}</div>
           <div class="size">${formatSize(entry.file.size)}</div>
@@ -144,7 +129,6 @@
       entry.w = newW;
       entry.h = newH;
       entry.url = dataUrl;
-      entry.thumbUrl = dataUrl;
       entry.ready = Promise.resolve();
       render();
     };
@@ -294,7 +278,6 @@
       targetEntry.w = canvas.width;
       targetEntry.h = canvas.height;
       targetEntry.url = dataUrl;
-      targetEntry.thumbUrl = dataUrl;
       targetEntry.ready = Promise.resolve();
       render();
     };
