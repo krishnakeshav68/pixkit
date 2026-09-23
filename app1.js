@@ -5,6 +5,10 @@
   const makeBtn = document.getElementById('makeBtn');
   const statusEl = document.getElementById('status');
   const pageSizeSel = document.getElementById('pageSize');
+  const pdfResultBox = document.getElementById('pdfResultBox');
+  const pdfResultInfo = document.getElementById('pdfResultInfo');
+  const downloadPdf = document.getElementById('downloadPdf');
+  let pdfBlob = null;
 
   let images = []; // {id, file, url, w, h}
   let idSeq = 0;
@@ -299,9 +303,23 @@
     statusEl.classList.toggle('err', !!isErr);
   }
 
+  downloadPdf.addEventListener('click', () => {
+    if (!pdfBlob) return;
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pixkit-images.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
   makeBtn.addEventListener('click', async () => {
     if (images.length === 0) return;
     makeBtn.disabled = true;
+    pdfResultBox.style.display = 'none';
+    pdfBlob = null;
     setStatus('Building PDF…');
     try {
       const { jsPDF } = window.jspdf;
@@ -360,16 +378,16 @@
       }
 
       const blob = doc.output('blob');
-
-      const a = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      a.href = url;
-      a.download = 'pixkit-images.pdf';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setStatus('PDF ready — check your downloads');
+      pdfBlob = blob;
+      const inputBytes = images.reduce((sum, entry) => sum + (entry.file?.size || 0), 0);
+      const pdfBytes = blob.size;
+      const reduction = inputBytes > 0 ? ((inputBytes - pdfBytes) / inputBytes) * 100 : 0;
+      const reductionText = reduction >= 0
+        ? `Reduced by ${reduction.toFixed(1)}%`
+        : `PDF is ${Math.abs(reduction).toFixed(1)}% larger than the selected images`;
+      pdfResultInfo.textContent = `PDF size: ${formatSize(pdfBytes)} · ${reductionText}`;
+      pdfResultBox.style.display = 'block';
+      setStatus('PDF created — ready to download');
     } catch (err) {
       console.error(err);
       setStatus('Something went wrong building the PDF. Try again.', true);
