@@ -1,0 +1,19 @@
+{
+  "name": "PixKit — Image & PDF Tools",
+  "short_name": "PixKit",
+  "description": "Simple image and PDF tools that process your files in the browser.",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFAF0",
+  "theme_color": "#4A3EC7",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
