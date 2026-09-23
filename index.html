@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -60,6 +60,10 @@
 
   <button class="primary" id="makeBtn" disabled>Add images to continue</button>
   <div class="status" id="status"></div>
+  <div id="pdfResultBox" style="display:none; margin-top:22px; padding-top:18px; border-top:1px dashed var(--line);">
+    <div class="label-small" id="pdfResultInfo" style="color:var(--teal); font-weight:600; margin-bottom:14px;"></div>
+    <button class="primary" id="downloadPdf">Download PDF</button>
+  </div>
   </section>
 
   <section id="tab-compress" style="display:none;">
@@ -126,7 +130,7 @@
   </div>
 </div>
 
-<script src="app1.js?v=4"></script>
-<script src="app2.js?v=3"></script>
+<script src="app1.js?v=5"></script>
+<script src="app2.js?v=4"></script>
 </body>
 </html>
