@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://krishnakeshav68.github.io/pixkit/sitemap.xml
