@@ -394,3 +394,4 @@
     tabCompress.style.display = '';
     tabPdf.style.display = 'none';
   });
+})();
