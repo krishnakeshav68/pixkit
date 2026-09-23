@@ -40,15 +40,6 @@
   qualitySel.addEventListener('change', applyQuality);
   applyQuality();
 
-  tabBtn.addEventListener('click', () => {
-    tabBtn.classList.add('active');
-    document.getElementById('tabBtnPdf').classList.remove('active');
-    document.getElementById('tabBtnCompress').classList.remove('active');
-    tabPdf.style.display = 'none';
-    tabCompress.style.display = 'none';
-    tabPdfCompress.style.display = '';
-  });
-
   drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
   drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
   drop.addEventListener('drop', e => {
