@@ -400,16 +400,20 @@
   const tabBtnCompress = document.getElementById('tabBtnCompress');
   const tabPdf = document.getElementById('tab-pdf');
   const tabCompress = document.getElementById('tab-compress');
+  const tabPdfCompress = document.getElementById('tab-pdf-compress');
+  const tabBtnPdfCompress = document.getElementById('tabBtnPdfCompress');
   tabBtnPdf.addEventListener('click', () => {
     tabBtnPdf.classList.add('active');
     tabBtnCompress.classList.remove('active');
     tabPdf.style.display = '';
     tabCompress.style.display = 'none';
+    tabPdfCompress.style.display = 'none';
   });
   tabBtnCompress.addEventListener('click', () => {
     tabBtnCompress.classList.add('active');
     tabBtnPdf.classList.remove('active');
     tabCompress.style.display = '';
     tabPdf.style.display = 'none';
+    tabPdfCompress.style.display = 'none';
   });
 })();
