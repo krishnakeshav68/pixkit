@@ -3,15 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="PixKit provides simple image and PDF tools. Convert images to PDF and compress images directly in your browser.">
+<meta name="description" content="PixKit is a free online image and PDF toolkit. Convert images to PDF, compress images and PDFs, crop and rotate photos, and prepare exam images directly in your browser.">
 <meta name="theme-color" content="#4A3EC7">
 <meta name="application-name" content="PixKit">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="PixKit — Simple Image & PDF Tools">
-<meta property="og:description" content="Convert images to PDF, compress, crop and prepare images directly in your browser.">
+<meta property="og:title" content="PixKit — Free Image & PDF Tools">
+<meta property="og:description" content="Free browser-based tools to convert images to PDF, compress images and PDFs, crop, rotate, and prepare photos and signatures.">
 <meta property="og:url" content="https://krishnakeshav68.github.io/pixkit/">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PixKit — Free Image & PDF Tools">
+<meta name="twitter:description" content="Convert images to PDF and compress images or PDFs directly in your browser.">
+<meta name="keywords" content="image to PDF, JPG to PDF, PNG to PDF, compress image, compress PDF, image compressor, PDF compressor, photo resize, signature resize, exam photo size, online image tools">
 <link rel="canonical" href="https://krishnakeshav68.github.io/pixkit/">
 <title>PixKit — Simple Image & PDF Tools</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -42,13 +45,18 @@
     </div>
   </header>
 
+  <section class="seo-intro" aria-label="PixKit tools">
+    <h2>Free online image and PDF tools</h2>
+    <p>Use PixKit to convert images to PDF, reduce image or PDF file sizes, crop and rotate photos, and prepare images for online forms and applications. Your selected files are processed in your browser.</p>
+  </section>
+
   <div class="tabs">
-    <button class="tab active" id="tabBtnPdf" data-tab="pdf">Image → PDF</button>
-    <button class="tab" id="tabBtnCompress" data-tab="compress">Compress Image</button>
-    <button class="tab" id="tabBtnPdfCompress" data-tab="pdf-compress">Compress PDF</button>
+    <button class="tab active" id="tabBtnPdf" data-tab="pdf" aria-controls="tab-pdf" aria-selected="true">Image → PDF</button>
+    <button class="tab" id="tabBtnCompress" data-tab="compress" aria-controls="tab-compress" aria-selected="false">Compress Image</button>
+    <button class="tab" id="tabBtnPdfCompress" data-tab="pdf-compress" aria-controls="tab-pdf-compress" aria-selected="false">Compress PDF</button>
   </div>
 
-  <section id="tab-pdf">
+  <section id="tab-pdf" aria-labelledby="tabBtnPdf">
   <label class="drop" id="drop" for="fileInput">
     <div class="big">Tap to choose images</div>
     <div class="small">or drop them here — JPG, PNG, WebP</div>
@@ -74,7 +82,7 @@
   </div>
   </section>
 
-  <section id="tab-compress" style="display:none;">
+  <section id="tab-compress" aria-labelledby="tabBtnCompress" style="display:none;">
     <p class="muted">These size and pixel limits are collected from public exam guides, not fetched live from any portal — cycles and states vary. Check your own application screen before uploading.</p>
 
     <label class="drop" id="dropC" for="fileInputC">
@@ -113,7 +121,7 @@
     </div>
   </section>
 
-  <section id="tab-pdf-compress" style="display:none;">
+  <section id="tab-pdf-compress" aria-labelledby="tabBtnPdfCompress" style="display:none;">
     <p class="muted">Compress a PDF in your browser by rendering its pages as optimized images. This can significantly reduce scanned/image-heavy PDFs. Text in the compressed PDF may no longer be selectable.</p>
 
     <label class="drop" id="dropPdfC" for="fileInputPdfC">
