@@ -18,8 +18,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 </head>
 <body>
 
@@ -38,6 +40,7 @@
   <div class="tabs">
     <button class="tab active" id="tabBtnPdf" data-tab="pdf">Image → PDF</button>
     <button class="tab" id="tabBtnCompress" data-tab="compress">Compress Image</button>
+    <button class="tab" id="tabBtnPdfCompress" data-tab="pdf-compress">Compress PDF</button>
   </div>
 
   <section id="tab-pdf">
@@ -104,6 +107,36 @@
       <button class="primary" id="downloadCompressed">Save image</button>
     </div>
   </section>
+
+  <section id="tab-pdf-compress" style="display:none;">
+    <p class="muted">Compress a PDF in your browser by rendering its pages as optimized images. This can significantly reduce scanned/image-heavy PDFs. Text in the compressed PDF may no longer be selectable.</p>
+
+    <label class="drop" id="dropPdfC" for="fileInputPdfC">
+      <div class="big">Tap to choose a PDF</div>
+      <div class="small">PDF files only</div>
+    </label>
+    <input type="file" id="fileInputPdfC" accept="application/pdf,.pdf" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;">
+
+    <div class="row" style="margin-top:20px;">
+      <span class="label-small">Compression</span>
+      <select id="pdfQuality">
+        <option value="high">High quality</option>
+        <option value="balanced" selected>Balanced</option>
+        <option value="maximum">Maximum compression</option>
+      </select>
+    </div>
+
+    <div class="label-small" id="pdfQualityNote" style="margin-top:8px; line-height:1.5;"></div>
+    <div class="label-small" id="pdfFileInfo" style="margin-top:10px;"></div>
+
+    <button class="primary" id="compressPdfBtn" disabled>Add a PDF to continue</button>
+    <div class="status" id="statusPdfC"></div>
+
+    <div id="pdfCompressResult" style="display:none; margin-top:22px; padding-top:18px; border-top:1px dashed var(--line);">
+      <div class="label-small" id="pdfCompressInfo" style="color:var(--teal); font-weight:600; margin-bottom:14px;"></div>
+      <button class="primary" id="downloadPdfCompressed">Download compressed PDF</button>
+    </div>
+  </section>
 </div>
 
   <footer class="site-footer">
@@ -130,7 +163,8 @@
   </div>
 </div>
 
-<script src="app1.js?v=5"></script>
-<script src="app2.js?v=4"></script>
+<script src="app1.js?v=6"></script>
+<script src="app2.js?v=5"></script>
+<script src="app3.js?v=1"></script>
 </body>
 </html>
