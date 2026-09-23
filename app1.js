@@ -405,6 +405,7 @@
   tabBtnPdf.addEventListener('click', () => {
     tabBtnPdf.classList.add('active');
     tabBtnCompress.classList.remove('active');
+    tabBtnPdfCompress.classList.remove('active');
     tabPdf.style.display = '';
     tabCompress.style.display = 'none';
     tabPdfCompress.style.display = 'none';
@@ -412,6 +413,7 @@
   tabBtnCompress.addEventListener('click', () => {
     tabBtnCompress.classList.add('active');
     tabBtnPdf.classList.remove('active');
+    tabBtnPdfCompress.classList.remove('active');
     tabCompress.style.display = '';
     tabPdf.style.display = 'none';
     tabPdfCompress.style.display = 'none';
