@@ -1,3 +1,4 @@
+(function () {
 // PixKit compression module
   const PRESETS = {
     upsc_photo: {
