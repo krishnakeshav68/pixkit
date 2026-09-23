@@ -1,1 +1,125 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PixKit</title></head><body><h1>PixKit</h1><p>Deploying PixKit…</p></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="PixKit provides simple image and PDF tools. Convert images to PDF and compress images directly in your browser.">
+<meta name="theme-color" content="#4A3EC7">
+<meta name="application-name" content="PixKit">
+<title>PixKit — Simple Image & PDF Tools</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="kicker">✦ Free &amp; on-device</span>
+    <h1>PixKit</h1>
+    <p>Simple image &amp; PDF tools. Convert, compress, crop and prepare your images — right in your browser.</p>
+    <div class="trust-strip">
+      <span>🔒 Files stay on your device</span>
+      <span>•</span>
+      <span>No account required</span>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" id="tabBtnPdf" data-tab="pdf">Image → PDF</button>
+    <button class="tab" id="tabBtnCompress" data-tab="compress">Compress Image</button>
+  </div>
+
+  <section id="tab-pdf">
+  <label class="drop" id="drop" for="fileInput">
+    <div class="big">Tap to choose images</div>
+    <div class="small">or drop them here — JPG, PNG, WebP</div>
+  </label>
+  <input type="file" id="fileInput" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;">
+
+  <div class="stack" id="stack"></div>
+
+  <div class="row">
+    <span class="label-small">Page size</span>
+    <select id="pageSize">
+      <option value="a4">A4</option>
+      <option value="letter">US Letter</option>
+      <option value="fit">Fit to image</option>
+    </select>
+  </div>
+
+  <button class="primary" id="makeBtn" disabled>Add images to continue</button>
+  <div class="status" id="status"></div>
+  </section>
+
+  <section id="tab-compress" style="display:none;">
+    <p class="muted">These size and pixel limits are collected from public exam guides, not fetched live from any portal — cycles and states vary. Check your own application screen before uploading.</p>
+
+    <label class="drop" id="dropC" for="fileInputC">
+      <div class="big">Tap to choose a photo or signature</div>
+      <div class="small">One image at a time</div>
+    </label>
+    <input type="file" id="fileInputC" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;">
+
+    <div class="row" style="margin-top:20px;">
+      <span class="label-small">Preset</span>
+      <select id="presetSel">
+        <option value="upsc_photo">UPSC — Photograph</option>
+        <option value="upsc_sign">UPSC — Signature</option>
+        <option value="bpsc72_sign">BPSC — Signature</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="label-small" id="presetNote" style="margin-top:8px; line-height:1.5;"></div>
+
+    <div class="field-grid">
+      <label>Width (px)<input type="number" id="targetW"></label>
+      <label>Height (px)<input type="number" id="targetH"></label>
+      <label>Min size (KB)<input type="number" id="minKB"></label>
+      <label>Max size (KB)<input type="number" id="maxKB"></label>
+    </div>
+
+    <img id="compressPreview" alt="" style="display:none;">
+
+    <button class="primary" id="compressBtn" disabled>Add an image to continue</button>
+    <div class="status" id="statusC"></div>
+
+    <div id="resultBox" style="display:none;">
+      <img id="resultImg" alt="">
+      <div class="label-small" id="resultInfo"></div>
+      <button class="primary" id="downloadCompressed">Save image</button>
+    </div>
+  </section>
+</div>
+
+  <footer class="site-footer">
+    <strong>PixKit</strong>
+    <span>Simple image &amp; PDF tools — processing happens in your browser.</span>
+  </footer>
+
+<div class="crop-modal" id="cropModal">
+  <div class="crop-toolbar">
+    <button class="crop-icon-btn" id="cropRotateBtn" title="Rotate">&#10227; Rotate</button>
+  </div>
+  <div class="crop-stage" id="cropStage">
+    <img id="cropImg" draggable="false" alt="">
+    <div class="crop-box" id="cropBox">
+      <div class="handle tl" data-h="tl"></div>
+      <div class="handle tr" data-h="tr"></div>
+      <div class="handle bl" data-h="bl"></div>
+      <div class="handle br" data-h="br"></div>
+    </div>
+  </div>
+  <div class="crop-actions">
+    <button class="crop-btn ghost" id="cropCancel">Cancel</button>
+    <button class="crop-btn solid" id="cropApply">Apply crop</button>
+  </div>
+</div>
+
+<script src="app1.js"></script>
+<script src="app2.js"></script>
+</body>
+</html>
