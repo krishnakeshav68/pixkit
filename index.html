@@ -39,7 +39,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=8">
+<link rel="stylesheet" href="styles.css?v=10">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
@@ -63,13 +63,13 @@
     <p>Use PixKit to convert images to PDF, reduce image or PDF file sizes, crop and rotate photos, and prepare images for online forms and applications. Your selected files are processed in your browser.</p>
   </section>
 
-  <div class="tabs">
-    <button class="tab active" id="tabBtnPdf" data-tab="pdf" aria-controls="tab-pdf" aria-selected="true">Image → PDF</button>
-    <button class="tab" id="tabBtnCompress" data-tab="compress" aria-controls="tab-compress" aria-selected="false">Compress Image</button>
-    <button class="tab" id="tabBtnPdfCompress" data-tab="pdf-compress" aria-controls="tab-pdf-compress" aria-selected="false">Compress PDF</button>
+  <div class="tabs" role="tablist" aria-label="PixKit tools">
+    <button class="tab active" id="tabBtnPdf" role="tab" tabindex="0" data-tab="pdf" aria-controls="tab-pdf" aria-selected="true"><span>Image → PDF</span><small>Combine multiple photos into one PDF</small></button>
+    <button class="tab" id="tabBtnCompress" role="tab" tabindex="-1" data-tab="compress" aria-controls="tab-compress" aria-selected="false"><span>Compress Image</span><small>Reduce image size for sharing or forms</small></button>
+    <button class="tab" id="tabBtnPdfCompress" role="tab" tabindex="-1" data-tab="pdf-compress" aria-controls="tab-pdf-compress" aria-selected="false"><span>Compress PDF</span><small>Make large PDFs smaller and easier to share</small></button>
   </div>
 
-  <section id="tab-pdf" aria-labelledby="tabBtnPdf">
+  <section id="tab-pdf" role="tabpanel" aria-labelledby="tabBtnPdf">
   <label class="drop" id="drop" for="fileInput">
     <div class="big">Tap to choose images</div>
     <div class="small">or drop them here — JPG, PNG, WebP</div>
@@ -91,12 +91,12 @@
   <div class="status" id="status"></div>
   <div id="pdfResultBox" style="display:none; margin-top:22px; padding-top:18px; border-top:1px dashed var(--line);">
     <div class="label-small" id="pdfResultInfo" style="color:var(--teal); font-weight:600; margin-bottom:14px;"></div>
-    <button class="primary" id="downloadPdf">Download PDF</button>
+    <button class="primary" id="downloadPdf">Download PDF</button><button class="secondary-action" id="resetPdf" type="button">Start over</button>
   </div>
   </section>
 
-  <section id="tab-compress" aria-labelledby="tabBtnCompress" style="display:none;">
-    <p class="muted">These size and pixel limits are collected from public exam guides, not fetched live from any portal — cycles and states vary. Check your own application screen before uploading.</p>
+  <section id="tab-compress" role="tabpanel" aria-labelledby="tabBtnCompress" style="display:none;">
+    <p class="muted">Choose a purpose first. Then optionally choose an exam or portal preset. These size and pixel limits are collected from public exam guides, not fetched live from any portal — cycles and states vary. Check your own application screen before uploading.</p>
 
     <label class="drop" id="dropC" for="fileInputC">
       <div class="big">Tap to choose a photo or signature</div>
@@ -106,14 +106,11 @@
 
     <div class="row" style="margin-top:20px;">
       <span class="label-small">Preset</span>
-      <select id="presetSel">
-        <option value="upsc_photo">UPSC — Photograph</option>
-        <option value="upsc_sign">UPSC — Signature</option>
-        <option value="bpsc72_sign">BPSC — Signature</option>
-        <option value="custom">Custom</option>
-      </select>
+      <select id="presetSel" aria-label="Image purpose"><option value="photo">Photo</option><option value="signature">Signature</option><option value="custom">Custom</option></select>
     </div>
     <div class="label-small" id="presetNote" style="margin-top:8px; line-height:1.5;"></div>
+    <div class="row" id="examRow" style="margin-top:14px;display:none;"><span class="label-small">Optional exam / portal</span><select id="examSel" aria-label="Exam or portal preset"><option value="none">General</option><option value="upsc_photo">UPSC — Photograph</option><option value="upsc_sign">UPSC — Signature</option><option value="bpsc72_sign">BPSC — Signature</option></select></div>
+    <div class="row" style="margin-top:14px;"><span class="label-small">Resize behavior</span><select id="fitMode" aria-label="Resize behavior"><option value="crop">Crop to exact size</option><option value="fit">Fit with padding</option><option value="stretch">Exact size (may stretch)</option></select></div>
 
     <div class="field-grid">
       <label>Width (px)<input type="number" id="targetW"></label>
@@ -123,6 +120,7 @@
     </div>
 
     <img id="compressPreview" alt="" style="display:none;">
+    <div class="compare-grid" id="comparePreview" style="display:none;"><div><div class="label-small">Before</div><img id="beforeImg" alt="Original image"></div><div><div class="label-small">After</div><img id="afterImg" alt="Compressed image"></div></div>
 
     <button class="primary" id="compressBtn" disabled>Add an image to continue</button>
     <div class="status" id="statusC"></div>
@@ -130,11 +128,11 @@
     <div id="resultBox" style="display:none;">
       <img id="resultImg" alt="">
       <div class="label-small" id="resultInfo"></div>
-      <button class="primary" id="downloadCompressed">Save image</button>
+      <button class="primary" id="downloadCompressed">Save image</button><button class="secondary-action" id="resetCompress" type="button">Start over</button>
     </div>
   </section>
 
-  <section id="tab-pdf-compress" aria-labelledby="tabBtnPdfCompress" style="display:none;">
+  <section id="tab-pdf-compress" role="tabpanel" aria-labelledby="tabBtnPdfCompress" style="display:none;">
     <p class="muted">Compress a PDF in your browser by rendering its pages as optimized images. This can significantly reduce scanned/image-heavy PDFs. Text in the compressed PDF may no longer be selectable.</p>
 
     <label class="drop" id="dropPdfC" for="fileInputPdfC">
@@ -153,14 +151,14 @@
     </div>
 
     <div class="label-small" id="pdfQualityNote" style="margin-top:8px; line-height:1.5;"></div>
-    <div class="label-small" id="pdfFileInfo" style="margin-top:10px;"></div>
+    <div class="label-small" id="pdfFileInfo" style="margin-top:10px;"></div><div class="pdf-progress" id="pdfProgress" style="display:none;"><div class="pdf-progress-track"><div class="pdf-progress-bar" id="pdfProgressBar"></div></div><div class="label-small" id="pdfProgressText"></div><button class="secondary-action" id="cancelPdfCompress" type="button">Cancel</button></div>
 
     <button class="primary" id="compressPdfBtn" disabled>Add a PDF to continue</button>
     <div class="status" id="statusPdfC"></div>
 
     <div id="pdfCompressResult" style="display:none; margin-top:22px; padding-top:18px; border-top:1px dashed var(--line);">
       <div class="label-small" id="pdfCompressInfo" style="color:var(--teal); font-weight:600; margin-bottom:14px;"></div>
-      <button class="primary" id="downloadPdfCompressed">Download compressed PDF</button>
+      <button class="primary" id="downloadPdfCompressed">Download compressed PDF</button><button class="secondary-action" id="resetPdfCompress" type="button">Start over</button>
     </div>
   </section>
 </div>
@@ -197,9 +195,9 @@
   </div>
 </div>
 
-<script src="app1.js?v=8"></script>
-<script src="app2.js?v=7"></script>
-<script src="app3.js?v=3"></script>
+<script src="app1.js?v=10"></script>
+<script src="app2.js?v=9"></script>
+<script src="app3.js?v=5"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -242,6 +240,6 @@ if ("serviceWorker" in navigator) {
 
   setActiveTab('pdf');
 })();
-</script>>
+</script>
 </body>
 </html>
