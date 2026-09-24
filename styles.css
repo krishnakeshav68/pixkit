@@ -74,3 +74,20 @@
 .faq details{border-bottom:1px solid var(--line);padding:13px 0;}
 .faq summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--ink);}
 .faq p{margin:9px 0 0;color:var(--ink-soft);font-size:13px;line-height:1.55;}
+
+.tool-subtitle{display:block;margin-top:3px;}
+.tabs .tab small{display:block;white-space:normal;line-height:1.15;opacity:.8;font-weight:500;}
+.secondary-action{display:block;width:100%;margin-top:10px;background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:11px 14px;font:600 14px var(--font-ui);cursor:pointer;}
+.secondary-action:hover{border-color:var(--accent);}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.compare-grid>div{min-width:0;}
+.compare-grid .label-small{display:block;margin-bottom:6px;}
+.compare-grid img{display:block;width:100%;max-height:220px;object-fit:contain;border:1px solid var(--line);border-radius:12px;background:var(--paper);}
+.pdf-progress{margin-top:14px;}
+.pdf-progress-track{height:8px;background:var(--line);border-radius:999px;overflow:hidden;}
+.pdf-progress-bar{height:100%;width:0;background:var(--indigo);transition:width .15s ease;}
+.pdf-progress .label-small{display:block;margin-top:6px;text-align:center;}
+@media(max-width:520px){
+  .tabs .tab small{font-size:9px;max-width:17ch;}
+  .compare-grid{grid-template-columns:1fr 1fr;gap:8px;}
+}
