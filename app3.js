@@ -13,6 +13,12 @@
   const resultBox = document.getElementById('pdfCompressResult');
   const resultInfo = document.getElementById('pdfCompressInfo');
   const downloadBtn = document.getElementById('downloadPdfCompressed');
+  const progressBox = document.getElementById('pdfProgress');
+  const progressBar = document.getElementById('pdfProgressBar');
+  const progressText = document.getElementById('pdfProgressText');
+  const cancelBtn = document.getElementById('cancelPdfCompress');
+  const resetBtn = document.getElementById('resetPdfCompress');
+  let cancelled = false;
 
   let pdfFile = null;
   let compressedBlob = null;
@@ -59,6 +65,9 @@
     }
     pdfFile = file;
     compressedBlob = null;
+    cancelled = false;
+    progressBox.style.display = 'none';
+    progressBar.style.width = '0%';
     fileInfo.textContent = 'Selected: ' + file.name + ' · ' + formatSize(file.size);
     compressBtn.disabled = false;
     compressBtn.textContent = 'Compress PDF';
@@ -70,7 +79,10 @@
     if (!pdfFile) return;
 
     compressBtn.disabled = true;
+    cancelBtn.style.display = '';
     resultBox.style.display = 'none';
+    progressBox.style.display = 'block';
+    progressBar.style.width = '0%';
     compressedBlob = null;
     setStatus('Reading PDF…');
 
@@ -89,6 +101,10 @@
       let out = null;
 
       for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+        if (cancelled) throw new Error('CANCELLED');
+        const pct = Math.round(((pageNo - 1) / pdf.numPages) * 100);
+        progressBar.style.width = pct + '%';
+        progressText.textContent = 'Compressing page ' + pageNo + ' of ' + pdf.numPages + '…';
         setStatus('Compressing page ' + pageNo + ' of ' + pdf.numPages + '…');
         const page = await pdf.getPage(pageNo);
         const originalViewport = page.getViewport({ scale: 1 });
@@ -124,7 +140,10 @@
         page.cleanup();
       }
 
+      if (cancelled) throw new Error('CANCELLED');
       compressedBlob = out.output('blob');
+      progressBar.style.width = '100%';
+      progressText.textContent = 'Finished — ready to download.';
       const reduction = ((pdfFile.size - compressedBlob.size) / pdfFile.size) * 100;
       const reductionText = reduction >= 0
         ? 'Reduced by ' + reduction.toFixed(1) + '%'
@@ -139,10 +158,17 @@
       resultBox.style.display = 'block';
       setStatus('PDF compressed — ready to download');
     } catch (err) {
-      console.error(err);
-      setStatus('Could not compress this PDF. Try a smaller PDF or another compression level.', true);
+      if (err && err.message === 'CANCELLED') {
+        setStatus('Compression cancelled.');
+        progressText.textContent = 'Cancelled.';
+      } else {
+        console.error(err);
+        setStatus('Could not compress this PDF. Try a smaller PDF or another compression level.', true);
+        progressText.textContent = 'Compression failed. A smaller PDF may work better.';
+      }
     } finally {
       compressBtn.disabled = !pdfFile;
+      cancelBtn.style.display = pdfFile ? '' : 'none';
     }
   });
 
@@ -158,3 +184,27 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
 })();
+
+
+  cancelBtn.addEventListener('click', () => {
+    cancelled = true;
+    cancelBtn.disabled = true;
+    setStatus('Stopping after the current page…');
+  });
+
+  resetBtn.addEventListener('click', () => {
+    cancelled = true;
+    pdfFile = null;
+    compressedBlob = null;
+    fileInput.value = '';
+    fileInfo.textContent = '';
+    resultBox.style.display = 'none';
+    progressBox.style.display = 'none';
+    progressBar.style.width = '0%';
+    progressText.textContent = '';
+    cancelBtn.style.display = 'none';
+    cancelBtn.disabled = false;
+    compressBtn.disabled = true;
+    compressBtn.textContent = 'Add a PDF to continue';
+    setStatus('');
+  });
