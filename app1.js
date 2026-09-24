@@ -88,25 +88,57 @@
     images.forEach((entry, i) => {
       const item = document.createElement('div');
       item.className = 'item';
-      item.innerHTML = `
-        <img src="${entry.url}" alt="">
-        <div class="meta">
-          <div class="name">${entry.file.name}</div>
-          <div class="size">${formatSize(entry.file.size)}</div>
-        </div>
-        <div class="order">
-          <button class="icon-btn up" ${i === 0 ? 'disabled' : ''}>&#8593;</button>
-          <button class="icon-btn down" ${i === images.length - 1 ? 'disabled' : ''}>&#8595;</button>
-        </div>
-        <button class="icon-btn rotate" title="Rotate">&#10227;</button>
-        <button class="icon-btn crop" title="Crop">&#9986;</button>
-        <button class="icon-btn remove">&#10005;</button>
-      `;
-      item.querySelector('.up').addEventListener('click', () => move(entry.id, -1));
-      item.querySelector('.down').addEventListener('click', () => move(entry.id, 1));
-      item.querySelector('.rotate').addEventListener('click', () => rotateImage(entry));
-      item.querySelector('.crop').addEventListener('click', () => openCropper(entry));
-      item.querySelector('.remove').addEventListener('click', () => removeImage(entry.id));
+
+      const img = document.createElement('img');
+      img.src = entry.url;
+      img.alt = 'Selected image ' + (i + 1);
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'name';
+      nameEl.textContent = entry.file.name;
+      const sizeEl = document.createElement('div');
+      sizeEl.className = 'size';
+      sizeEl.textContent = formatSize(entry.file.size);
+      meta.append(nameEl, sizeEl);
+
+      const order = document.createElement('div');
+      order.className = 'order';
+      const up = document.createElement('button');
+      up.className = 'icon-btn up';
+      up.disabled = i === 0;
+      up.title = 'Move image up';
+      up.textContent = '↑';
+      const down = document.createElement('button');
+      down.className = 'icon-btn down';
+      down.disabled = i === images.length - 1;
+      down.title = 'Move image down';
+      down.textContent = '↓';
+      order.append(up, down);
+
+      const rotate = document.createElement('button');
+      rotate.className = 'icon-btn rotate';
+      rotate.title = 'Rotate';
+      rotate.textContent = '⟳';
+
+      const crop = document.createElement('button');
+      crop.className = 'icon-btn crop';
+      crop.title = 'Crop';
+      crop.textContent = '✂';
+
+      const remove = document.createElement('button');
+      remove.className = 'icon-btn remove';
+      remove.title = 'Remove image';
+      remove.textContent = '×';
+
+      item.append(img, meta, order, rotate, crop, remove);
+
+      up.addEventListener('click', () => move(entry.id, -1));
+      down.addEventListener('click', () => move(entry.id, 1));
+      rotate.addEventListener('click', () => rotateImage(entry));
+      crop.addEventListener('click', () => openCropper(entry));
+      remove.addEventListener('click', () => removeImage(entry.id));
       stack.appendChild(item);
     });
     makeBtn.disabled = images.length === 0;
