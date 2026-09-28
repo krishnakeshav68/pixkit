@@ -19,9 +19,11 @@
     e.preventDefault();
     drop.classList.remove('drag');
     handleFiles(e.dataTransfer.files);
+    trackToolEvent('tool_file_selected', {source: 'drop'});
   });
   fileInput.addEventListener('change', e => {
     handleFiles(e.target.files);
+    trackToolEvent('tool_file_selected', {source: 'picker'});
     fileInput.value = '';
   });
 
@@ -335,6 +337,17 @@
     statusEl.classList.toggle('err', !!isErr);
   }
 
+  function trackToolEvent(action, params = {}) {
+    try {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', action, {
+          tool_name: 'Image to PDF',
+          ...params
+        });
+      }
+    } catch (e) {}
+  }
+
   downloadPdf.addEventListener('click', () => {
     if (!pdfBlob) return;
     const url = URL.createObjectURL(pdfBlob);
@@ -344,10 +357,12 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
+    trackToolEvent('tool_download', {action_detail: 'download_pdf'});
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
 
   makeBtn.addEventListener('click', async () => {
+    trackToolEvent('tool_start', {action_detail: 'create_pdf', file_count: images.length, page_size: pageSizeSel.value});
     if (images.length === 0) return;
     makeBtn.disabled = true;
     pdfResultBox.style.display = 'none';
