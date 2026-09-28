@@ -51,8 +51,8 @@
 
   dropC.addEventListener('dragover',e=>{e.preventDefault();dropC.classList.add('drag');});
   dropC.addEventListener('dragleave',()=>dropC.classList.remove('drag'));
-  dropC.addEventListener('drop',e=>{e.preventDefault();dropC.classList.remove('drag');if(e.dataTransfer.files[0])loadCompressFile(e.dataTransfer.files[0]);});
-  fileInputC.addEventListener('change',e=>{if(e.target.files[0])loadCompressFile(e.target.files[0]);fileInputC.value='';});
+  dropC.addEventListener('drop',e=>{e.preventDefault();dropC.classList.remove('drag');if(e.dataTransfer.files[0])loadCompressFile(e.dataTransfer.files[0]); trackToolEvent('tool_file_selected', {source:'drop'});});
+  fileInputC.addEventListener('change',e=>{if(e.target.files[0])loadCompressFile(e.target.files[0]); trackToolEvent('tool_file_selected', {source:'picker'});fileInputC.value='';});
 
   function loadCompressFile(file){
     if(!file.type.startsWith('image/')){setStatusC('Please choose an image file.',true);return;}
@@ -76,6 +76,17 @@
     const b64=dataUrl.slice(dataUrl.indexOf(',')+1); const pad=b64.endsWith('==')?2:(b64.endsWith('=')?1:0);
     return (b64.length*3/4-pad)/1024;
   }
+  function trackToolEvent(action, params = {}) {
+    try {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', action, {
+          tool_name: 'Compress Image',
+          ...params
+        });
+      }
+    } catch (e) {}
+  }
+
   function setStatusC(msg,err){statusC.textContent=msg||'';statusC.classList.toggle('err',!!err);}
 
   function renderSource(img,w,h){
@@ -101,6 +112,7 @@
   }
 
   compressBtn.addEventListener('click',()=>{
+    trackToolEvent('tool_start', {action_detail:'compress_image', purpose:presetSel.value, exam:examSel.value, fit_mode:fitModeSel.value});
     if(!compressImg)return;
     const w=Math.max(1,parseInt(targetW.value,10)||compressImg.naturalWidth);
     const h=Math.max(1,parseInt(targetH.value,10)||compressImg.naturalHeight);
@@ -123,7 +135,7 @@
     const blob=await (await fetch(compressResult.durl)).blob();
     const base=presetSel.value==='custom'?'compressed':presetSel.value==='signature'?'signature':'photo';
     const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download='pixkit-'+base+'.jpg';
-    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setStatusC('Image ready — check your downloads');
+    document.body.appendChild(a);a.click();a.remove();trackToolEvent('tool_download', {action_detail:'download_compressed_image'});setTimeout(()=>URL.revokeObjectURL(url),1000);setStatusC('Image ready — check your downloads');
   });
 
   resetCompress.addEventListener('click',()=>{
