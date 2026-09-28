@@ -209,9 +209,15 @@
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?build=5").catch(function () {});
+  });
+  navigator.serviceWorker.addEventListener("controllerchange", function () {
+    if (window.__pixkitReloaded) return;
+    window.__pixkitReloaded = true;
+    window.location.reload();
   });
 }
+</script>
 
 (function () {
   const buttons = {
