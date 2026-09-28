@@ -51,8 +51,8 @@
 
   dropC.addEventListener('dragover',e=>{e.preventDefault();dropC.classList.add('drag');});
   dropC.addEventListener('dragleave',()=>dropC.classList.remove('drag'));
-  dropC.addEventListener('drop',e=>{e.preventDefault();dropC.classList.remove('drag');if(e.dataTransfer.files[0])loadCompressFile(e.dataTransfer.files[0]); trackToolEvent('tool_file_selected', {source:'drop'});});
-  fileInputC.addEventListener('change',e=>{if(e.target.files[0])loadCompressFile(e.target.files[0]); trackToolEvent('tool_file_selected', {source:'picker'});fileInputC.value='';});
+  dropC.addEventListener('drop',e=>{e.preventDefault();dropC.classList.remove('drag');if(e.dataTransfer.files[0])loadCompressFile(e.dataTransfer.files[0]); trackToolEvent('tool_file_selected',{source:'drop'}); trackToolEvent('tool_file_selected', {source:'drop'});});
+  fileInputC.addEventListener('change',e=>{if(e.target.files[0])loadCompressFile(e.target.files[0]); trackToolEvent('tool_file_selected',{source:'picker'}); trackToolEvent('tool_file_selected', {source:'picker'});fileInputC.value='';});
 
   function loadCompressFile(file){
     if(!file.type.startsWith('image/')){setStatusC('Please choose an image file.',true);return;}
@@ -112,6 +112,7 @@
   }
 
   compressBtn.addEventListener('click',()=>{
+    trackToolEvent('tool_start',{action_detail:'compress_image',purpose:presetSel.value,exam:examSel.value,fit_mode:fitModeSel.value});
     trackToolEvent('tool_start', {action_detail:'compress_image', purpose:presetSel.value, exam:examSel.value, fit_mode:fitModeSel.value});
     if(!compressImg)return;
     const w=Math.max(1,parseInt(targetW.value,10)||compressImg.naturalWidth);
