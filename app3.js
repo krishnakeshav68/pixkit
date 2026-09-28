@@ -76,6 +76,7 @@
   }
 
   compressBtn.addEventListener('click', async () => {
+    trackToolEvent('tool_start',{action_detail:'compress_pdf',compression:qualitySel.value});
     if (!pdfFile) return;
 
     compressBtn.disabled = true;
@@ -181,6 +182,7 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
+    trackToolEvent('tool_download',{action_detail:'download_compressed_pdf'});
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
 })();
