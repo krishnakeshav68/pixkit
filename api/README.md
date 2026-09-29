@@ -1,15 +1,8 @@
 # PixKit image-generation API
 
-This endpoint keeps the image-provider API key off the browser.
+PixKit uses one browser-facing endpoint and keeps provider credentials on the server.
 
-## Deploy
-
-Deploy the repository to Vercel and add these environment variables:
-
-- `OPENAI_API_KEY` = your OpenAI API key
-- `PIXKIT_ALLOWED_ORIGINS` = `https://pixkit.world,https://www.pixkit.world`
-
-For local development, you can also include `http://localhost:3000` and `http://localhost:5173`.
+## Provider-neutral architecture
 
 The frontend calls:
 
@@ -18,13 +11,60 @@ The frontend calls:
 with:
 
 ```json
+{ "prompt": "...", "quality": "low", "provider": "auto" }
+```
+
+The server chooses an image engine. The frontend does not need to know which model is running.
+
+## Provider 1: OpenAI
+
+Set:
+
+- `PIXKIT_IMAGE_PROVIDER=openai`
+- `OPENAI_API_KEY=your_key`
+- Optional: `PIXKIT_OPENAI_IMAGE_MODEL=gpt-image-2`
+
+## Provider 2: PixKit self-hosted engine
+
+Set:
+
+- `PIXKIT_IMAGE_PROVIDER=self_hosted`
+- `PIXKIT_SELF_HOSTED_IMAGE_URL=https://your-gpu-server.example.com/generate`
+- Optional: `PIXKIT_SELF_HOSTED_IMAGE_TOKEN=...`
+
+The self-hosted endpoint should accept:
+
+```json
 { "prompt": "...", "quality": "low" }
 ```
 
-The endpoint returns a JPEG data URL.
+and return:
 
-The first MVP intentionally defaults to low-quality landscape images to keep generation cost down. OpenAI's current image API supports landscape generation and configurable quality; higher quality generally costs more.
+```json
+{ "image": "data:image/jpeg;base64,..." }
+```
 
-Do not put `OPENAI_API_KEY` in `index.html`, `story.js`, or any browser-side JavaScript.
+This contract lets us put an open-weight model such as FLUX or Qwen Image behind PixKit without changing the website UI.
 
-Before opening the feature to heavy public traffic, add proper rate limiting/usage controls at the API layer. Origin checking reduces casual cross-site abuse but is not a substitute for server-side rate limiting.
+If `PIXKIT_IMAGE_PROVIDER=auto`, PixKit prefers the self-hosted engine when it is configured and otherwise uses OpenAI.
+
+## Security
+
+- Never put provider keys in `index.html`, `story.js`, or other browser-side JavaScript.
+- `PIXKIT_ALLOWED_ORIGINS` controls which browser origins may call the endpoint.
+- Origin checking is not a substitute for rate limiting.
+- Before public launch, add server-side rate limits and usage controls.
+
+## Deployment
+
+For the current serverless deployment, deploy the repository to Vercel and configure the environment variables in the deployment settings.
+
+For the self-hosted engine, the GPU service can be deployed separately. PixKit only needs its HTTPS generation endpoint.
+
+## Roadmap
+
+1. Keep the current Story → Scenes UI.
+2. Add a self-hosted GPU endpoint implementing the small provider contract above.
+3. Start with an open-weight image model.
+4. Add character/scene consistency controls.
+5. Later add voice timing and video generation.
