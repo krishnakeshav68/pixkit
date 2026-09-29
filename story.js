@@ -1,6 +1,12 @@
 (function () {
   const btn = document.getElementById('buildStoryBtn');
   const text = document.getElementById('storyText');
+  const inputMode = document.getElementById('storyInputMode');
+  const textLabel = document.getElementById('storyTextLabel');
+  const audioFileWrap = document.getElementById('storyAudioFileWrap');
+  const audioFile = document.getElementById('storyAudioFile');
+  const audioFileInfo = document.getElementById('storyAudioFileInfo');
+  const audioPlayer = document.getElementById('storyAudioPlayer');
   const style = document.getElementById('storyStyle');
   const count = document.getElementById('sceneCount');
   const output = document.getElementById('storyOutput');
@@ -115,6 +121,39 @@
     });
   }
 
+  function resetAudioFile() {
+    if (audioPlayer) {
+      audioPlayer.pause();
+      audioPlayer.removeAttribute('src');
+      audioPlayer.load();
+      audioPlayer.style.display = 'none';
+    }
+    if (audioFileInfo) audioFileInfo.textContent = '';
+  }
+
+  function updateInputMode() {
+    const audio = inputMode.value === 'audio';
+    text.style.display = audio ? 'none' : '';
+    textLabel.style.display = audio ? 'none' : '';
+    audioFileWrap.style.display = audio ? '' : 'none';
+    if (!audio) resetAudioFile();
+    else if (audioFile && audioFile.files[0]) loadAudioFile(audioFile.files[0]);
+  }
+
+  function loadAudioFile(file) {
+    if (!file || !file.type.startsWith('audio/')) {
+      resetAudioFile();
+      if (audioFileInfo) audioFileInfo.textContent = 'Please choose an audio file.';
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    if (audioPlayer.src) URL.revokeObjectURL(audioPlayer.src);
+    audioPlayer.src = url;
+    audioPlayer.style.display = '';
+    audioFileInfo.textContent = file.name + ' · ' + Math.round(file.size / 1024) + ' KB';
+    setStatus('Audio file selected. It stays on your device.');
+  }
+
   function populateVoices() {
     if (!voiceSel || !('speechSynthesis' in window)) return;
     const voices = window.speechSynthesis.getVoices();
@@ -150,6 +189,9 @@
     utterance.onerror = () => setStatus('Audio playback failed on this device.', true);
     window.speechSynthesis.speak(utterance);
   }
+
+  inputMode.addEventListener('change', updateInputMode);
+  audioFile.addEventListener('change', () => loadAudioFile(audioFile.files[0]));
 
   output.addEventListener('change', () => {
     const audio = output.value === 'audio';
@@ -210,6 +252,12 @@
   }
 
   btn.addEventListener('click', () => {
+    if (inputMode.value === 'audio') {
+      const file = audioFile.files[0];
+      if (!file) return setStatus('Please select an audio file first.', true);
+      audioPlayer.play().then(() => setStatus('Playing selected audio…')).catch(() => setStatus('Press Play on the audio player to listen.', true));
+      return;
+    }
     const raw = text.value.trim();
     if (!raw) return setStatus('Please enter a story first.', true);
     if (output.value === 'audio') { playStoryAudio(); return; }
@@ -232,4 +280,5 @@
       setTimeout(() => copyButton.textContent = 'Copy prompt', 1000);
     } catch (_) {}
   });
+  updateInputMode();
 })();
