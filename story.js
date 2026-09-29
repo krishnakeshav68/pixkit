@@ -3,6 +3,13 @@
   const text = document.getElementById('storyText');
   const style = document.getElementById('storyStyle');
   const count = document.getElementById('sceneCount');
+  const output = document.getElementById('storyOutput');
+  const voiceWrap = document.getElementById('storyVoiceWrap');
+  const voiceSel = document.getElementById('storyVoice');
+  const audioControls = document.getElementById('storyAudioControls');
+  const playBtn = document.getElementById('storyPlayBtn');
+  const pauseBtn = document.getElementById('storyPauseBtn');
+  const stopBtn = document.getElementById('storyStopBtn');
   const status = document.getElementById('storyStatus');
   const scenesEl = document.getElementById('storyScenes');
   const bibleEl = document.getElementById('storyBible');
@@ -108,6 +115,67 @@
     });
   }
 
+  function populateVoices() {
+    if (!voiceSel || !('speechSynthesis' in window)) return;
+    const voices = window.speechSynthesis.getVoices();
+    const current = voiceSel.value;
+    voiceSel.innerHTML = '';
+    if (!voices.length) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'Default device voice';
+      voiceSel.appendChild(option);
+      return;
+    }
+    voices.forEach((voice, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = voice.name + ' — ' + voice.lang;
+      voiceSel.appendChild(option);
+    });
+    if (current && voices[Number(current)]) voiceSel.value = current;
+  }
+
+  function playStoryAudio() {
+    const value = text.value.trim();
+    if (!value) return setStatus('Please enter a story first.', true);
+    if (!('speechSynthesis' in window)) return setStatus('This browser does not support built-in audio narration.', true);
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(value);
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices[Number(voiceSel.value)];
+    if (voice) utterance.voice = voice;
+    utterance.onstart = () => setStatus('Reading your story aloud…');
+    utterance.onend = () => setStatus('Story finished.');
+    utterance.onerror = () => setStatus('Audio playback failed on this device.', true);
+    window.speechSynthesis.speak(utterance);
+  }
+
+  output.addEventListener('change', () => {
+    const audio = output.value === 'audio';
+    voiceWrap.style.display = audio ? '' : 'none';
+    audioControls.style.display = audio ? '' : 'none';
+    scenesEl.style.display = audio ? 'none' : '';
+    bibleEl.style.display = audio ? 'none' : '';
+    if (audio) populateVoices();
+    else if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  });
+
+  playBtn.addEventListener('click', playStoryAudio);
+  pauseBtn.addEventListener('click', () => {
+    if (!('speechSynthesis' in window) || !window.speechSynthesis.speaking) return;
+    if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+    else window.speechSynthesis.pause();
+  });
+  stopBtn.addEventListener('click', () => {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    setStatus('Audio stopped.');
+  });
+  if ('speechSynthesis' in window) {
+    populateVoices();
+    window.speechSynthesis.onvoiceschanged = populateVoices;
+  }
+
   function setStatus(message, error) {
     status.textContent = message;
     status.classList.toggle('err', Boolean(error));
@@ -144,6 +212,7 @@
   btn.addEventListener('click', () => {
     const raw = text.value.trim();
     if (!raw) return setStatus('Please enter a story first.', true);
+    if (output.value === 'audio') { playStoryAudio(); return; }
     const sentences = splitSentences(raw);
     if (sentences.length < 2) return setStatus('Please enter at least two sentences so the story can be divided into scenes.', true);
     const bible = localBible(raw);
