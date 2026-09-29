@@ -10,6 +10,8 @@
   const style = document.getElementById('storyStyle');
   const count = document.getElementById('sceneCount');
   const output = document.getElementById('storyOutput');
+  const languageWrap = document.getElementById('storyLanguageWrap');
+  const languageSel = document.getElementById('storyLanguage');
   const voiceWrap = document.getElementById('storyVoiceWrap');
   const voiceSel = document.getElementById('storyVoice');
   const audioControls = document.getElementById('storyAudioControls');
@@ -182,7 +184,12 @@
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(value);
     const voices = window.speechSynthesis.getVoices();
-    const voice = voices[Number(voiceSel.value)];
+    const selectedLang = languageSel.value === 'auto' ? '' : languageSel.value;
+    let voice = voices[Number(voiceSel.value)];
+    if (selectedLang && (!voice || !voice.lang.toLowerCase().startsWith(selectedLang.toLowerCase().split('-')[0]))) {
+      voice = voices.find(v => v.lang.toLowerCase() === selectedLang.toLowerCase()) || voices.find(v => v.lang.toLowerCase().startsWith(selectedLang.toLowerCase().split('-')[0])) || null;
+    }
+    if (selectedLang) utterance.lang = selectedLang;
     if (voice) utterance.voice = voice;
     utterance.onstart = () => setStatus('Reading your story aloud…');
     utterance.onend = () => setStatus('Story finished.');
@@ -195,6 +202,7 @@
 
   output.addEventListener('change', () => {
     const audio = output.value === 'audio';
+    languageWrap.style.display = audio ? '' : 'none';
     voiceWrap.style.display = audio ? '' : 'none';
     audioControls.style.display = audio ? '' : 'none';
     scenesEl.style.display = audio ? 'none' : '';
