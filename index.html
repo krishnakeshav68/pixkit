@@ -174,7 +174,7 @@
   <section id="tab-story" role="tabpanel" aria-labelledby="tabBtnStory" style="display:none;">
     <div class="story-intro">
       <h2>Turn a story into scenes</h2>
-      <p>Start with a story and create a visual plan for realistic story images. Your narration can be added later when we move this workflow to video.</p>
+      <p>Start with a story, create visual scenes, and generate realistic scene images. Your narration can be added later when we move this workflow to video. Image generation uses the secure PixKit API when configured.</p>
     </div>
     <label class="story-field-label" for="storyText">Your story</label>
     <textarea id="storyText" class="story-textarea" rows="10" placeholder="Paste your story here..."></textarea>
@@ -206,7 +206,7 @@
 <details><summary>Are my files uploaded to PixKit?</summary><p>PixKit is designed to process selected files in your browser. Files are not sent to a PixKit server for processing.</p></details>
 <details><summary>Can I convert multiple images to one PDF?</summary><p>Yes. The Image → PDF tool lets you select multiple images and arrange them before creating the PDF.</p></details>
 <details><summary>Can PixKit compress images?</summary><p>Yes. Compress Image supports presets and custom pixel and file-size limits, with the result size and percentage reduction shown before saving.</p></details>
-<details><summary>Can PixKit compress PDFs?</summary><p>Yes. Compress PDF can reduce image-heavy PDFs in your browser. The compressed PDF may contain image-based pages, so selectable text may be lost.</p></details>
+<details><summary>Can PixKit generate story images?</summary><p>Yes. Story → Scenes can send individual scene prompts to the configured image-generation API. The provider key stays on the server rather than in your browser.</p></details>\n<details><summary>Can PixKit compress PDFs?</summary><p>Yes. Compress PDF can reduce image-heavy PDFs in your browser. The compressed PDF may contain image-based pages, so selectable text may be lost.</p></details>
 </section>
 
   <footer class="site-footer">
@@ -235,7 +235,7 @@
 
 <script src="app1.js?v=13"></script>
 <script src="app2.js?v=12"></script>
-<script src="app3.js?v=8"></script>\n<script src="story.js?v=1"></script>
+<script src="app3.js?v=8"></script>\n<script src="story.js?v=2"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
