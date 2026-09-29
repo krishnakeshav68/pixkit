@@ -1,4 +1,4 @@
-const CACHE_NAME = "pixkit-v12";
+const CACHE_NAME = "pixkit-v13";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,7 +6,7 @@ const APP_SHELL = [
   "./app1.js?v=13",
   "./app2.js?v=12",
   "./app3.js?v=8",
-  "./story.js?v=7",
+  "./story.js?v=8",
   "./favicon.svg",
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
