@@ -74,7 +74,7 @@
   <div class="tabs" role="tablist" aria-label="PixKit tools">
     <button class="tab active" id="tabBtnPdf" role="tab" tabindex="0" data-tab="pdf" aria-controls="tab-pdf" aria-selected="true"><span>Image → PDF</span><small>Combine multiple photos into one PDF</small></button>
     <button class="tab" id="tabBtnCompress" role="tab" tabindex="-1" data-tab="compress" aria-controls="tab-compress" aria-selected="false"><span>Compress Image</span><small>Reduce image size for sharing or forms</small></button>
-    <button class="tab" id="tabBtnPdfCompress" role="tab" tabindex="-1" data-tab="pdf-compress" aria-controls="tab-pdf-compress" aria-selected="false"><span>Compress PDF</span><small>Make large PDFs smaller and easier to share</small></button>
+    <button class="tab" id="tabBtnStory" role="tab" tabindex="-1" data-tab="story" aria-controls="tab-story" aria-selected="false"><span>Story → Scenes</span><small>Plan visuals from your story</small></button>\n    <button class="tab" id="tabBtnPdfCompress" role="tab" tabindex="-1" data-tab="pdf-compress" aria-controls="tab-pdf-compress" aria-selected="false"><span>Compress PDF</span><small>Make large PDFs smaller and easier to share</small></button>
   </div>
 
   <section id="tab-pdf" role="tabpanel" aria-labelledby="tabBtnPdf">
@@ -171,6 +171,36 @@
   </section>
 </div>
 
+  <section id="tab-story" role="tabpanel" aria-labelledby="tabBtnStory" style="display:none;">
+    <div class="story-intro">
+      <h2>Turn a story into scenes</h2>
+      <p>Start with a story and create a visual plan for realistic story images. Your narration can be added later when we move this workflow to video.</p>
+    </div>
+    <label class="story-field-label" for="storyText">Your story</label>
+    <textarea id="storyText" class="story-textarea" rows="10" placeholder="Paste your story here..."></textarea>
+    <div class="story-options">
+      <label><span class="label-small">Visual style</span>
+        <select id="storyStyle">
+          <option value="realistic cinematic">Realistic cinematic</option>
+          <option value="photorealistic">Photorealistic</option>
+          <option value="cinematic wildlife">Cinematic wildlife</option>
+          <option value="storybook realistic">Realistic storybook</option>
+        </select>
+      </label>
+      <label><span class="label-small">Scenes</span>
+        <select id="sceneCount">
+          <option value="auto">Automatic</option>
+          <option value="4">4 scenes</option>
+          <option value="6">6 scenes</option>
+          <option value="8">8 scenes</option>
+        </select>
+      </label>
+    </div>
+    <button class="primary story-primary" id="buildStoryBtn">Build scene plan</button>
+    <div class="status" id="storyStatus"></div>
+    <div id="storyScenes" class="story-scenes"></div>
+  </section>
+
   <section class="faq" aria-labelledby="faq-title">
 <h2 id="faq-title">Frequently asked questions</h2>
 <details><summary>Are my files uploaded to PixKit?</summary><p>PixKit is designed to process selected files in your browser. Files are not sent to a PixKit server for processing.</p></details>
@@ -205,7 +235,7 @@
 
 <script src="app1.js?v=13"></script>
 <script src="app2.js?v=12"></script>
-<script src="app3.js?v=8"></script>
+<script src="app3.js?v=8"></script>\n<script src="story.js?v=1"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
