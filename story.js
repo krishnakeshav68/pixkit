@@ -7,6 +7,7 @@
   const scenesEl = document.getElementById('storyScenes');
 
   const IMAGE_API = window.PIXKIT_IMAGE_API || '/api/generate-image';
+  let currentScenes = [];
 
   function splitSentences(value) {
     return value.replace(/\s+/g, ' ').trim().match(/[^.!?।]+[.!?।]?/g) || [];
@@ -45,6 +46,7 @@
   }
 
   function renderScenes(scenes) {
+    currentScenes = scenes;
     scenesEl.innerHTML = scenes.map(scene => `
       <article class="story-scene" data-scene="${scene.number}">
         <div class="story-scene-head">
@@ -59,7 +61,7 @@
         </div>
         <div class="story-scene-actions">
           <button class="secondary-action story-generate" type="button" data-number="${scene.number}">Generate image</button>
-          <button class="secondary-action story-copy" type="button" data-prompt="${escapeHtml(scene.visual)}">Copy prompt</button>
+          <button class="secondary-action story-copy" type="button" data-number="${scene.number}">Copy prompt</button>
         </div>
       </article>
     `).join('');
@@ -76,7 +78,11 @@
       const response = await fetch(IMAGE_API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: scene.visual, quality: 'low' })
+        body: JSON.stringify({
+          prompt: scene.visual,
+          quality: 'low',
+          provider: 'auto'
+        })
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.image) {
@@ -113,26 +119,28 @@
     }
 
     setStatus('');
-    const scenes = makeScenes(sentences, count.value);
-    renderScenes(scenes);
-    setStatus(scenes.length + ' scenes created. Generate an image for any scene.');
+    renderScenes(makeScenes(sentences, count.value));
+    setStatus(currentScenes.length + ' scenes created. Generate an image for any scene.');
   });
 
   scenesEl.addEventListener('click', async event => {
     const generateButton = event.target.closest('.story-generate');
     if (generateButton) {
       const number = Number(generateButton.dataset.number);
-      const article = generateButton.closest('.story-scene');
-      const prompt = article.querySelector('.story-prompt').textContent.replace(/^Image prompt:\s*/i, '');
-      await generateImage(generateButton, { number, visual: prompt });
+      const scene = currentScenes.find(item => item.number === number);
+      if (scene) await generateImage(generateButton, scene);
       return;
     }
 
     const copyButton = event.target.closest('.story-copy');
     if (!copyButton) return;
 
+    const number = Number(copyButton.dataset.number);
+    const scene = currentScenes.find(item => item.number === number);
+    if (!scene) return;
+
     try {
-      await navigator.clipboard.writeText(copyButton.getAttribute('data-prompt'));
+      await navigator.clipboard.writeText(scene.visual);
       copyButton.textContent = 'Copied';
       setTimeout(() => copyButton.textContent = 'Copy prompt', 1000);
     } catch (_) {}
