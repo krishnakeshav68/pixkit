@@ -68,3 +68,19 @@ For the self-hosted engine, the GPU service can be deployed separately. PixKit o
 3. Start with an open-weight image model.
 4. Add character/scene consistency controls.
 5. Later add voice timing and video generation.
+
+## AI story analyzer
+
+Story → Scenes can optionally call:
+
+- `POST /api/analyze-story`
+
+The analyzer uses the server-side `OPENAI_API_KEY` and returns structured story data for characters, locations, world continuity and scene planning.
+
+Optional environment variable:
+
+- `PIXKIT_STORY_MODEL=gpt-5.6-luna`
+
+The browser never receives the OpenAI key. If story analysis is unavailable, the Story → Scenes UI falls back to local continuity rules.
+
+The analyzer request uses `store: false` so the application does not ask the Responses API to store the response. OpenAI's current Responses API supports structured JSON output through `text.format.type=json_schema`.
