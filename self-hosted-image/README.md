@@ -99,7 +99,7 @@ The engine accepts the same `referenceImages` field used by the PixKit API:
 }
 ```
 
-Reference images are applied through Diffusers IP-Adapter when configured. Diffusers documents IP-Adapter support for Flux and the `ip_adapter_image` pipeline input. citeturn0search4
+Reference images are applied through Diffusers IP-Adapter when configured. Diffusers supports IP-Adapter reference images for Flux through the `ip_adapter_image` pipeline input.
 
 Configure a compatible adapter with:
 
