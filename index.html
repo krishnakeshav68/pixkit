@@ -174,7 +174,7 @@
   <section id="tab-story" role="tabpanel" aria-labelledby="tabBtnStory" style="display:none;">
     <div class="story-intro">
       <h2>Turn a story into scenes</h2>
-      <p>Start with a story, create visual scenes, and generate realistic scene images. Your narration can be added later when we move this workflow to video. Image generation uses the secure PixKit API when configured. Add a reference image for recurring characters to improve visual consistency.</p>
+      <p>Start with a story and create a scene plan entirely in your browser. PixKit builds local continuity prompts without calling a paid AI API. Image generation is intentionally off for now; a local open-source image model can be connected later.</p>
     </div>
     <label class="story-field-label" for="storyText">Your story</label>
     <textarea id="storyText" class="story-textarea" rows="10" placeholder="Paste your story here..."></textarea>
@@ -207,7 +207,7 @@
 <details><summary>Are my files uploaded to PixKit?</summary><p>PixKit is designed to process selected files in your browser. Files are not sent to a PixKit server for processing.</p></details>
 <details><summary>Can I convert multiple images to one PDF?</summary><p>Yes. The Image → PDF tool lets you select multiple images and arrange them before creating the PDF.</p></details>
 <details><summary>Can PixKit compress images?</summary><p>Yes. Compress Image supports presets and custom pixel and file-size limits, with the result size and percentage reduction shown before saving.</p></details>
-<details><summary>Can PixKit generate story images?</summary><p>Yes. Story → Scenes can send individual scene prompts to the configured image-generation API. The provider key stays on the server rather than in your browser.</p></details>\n<details><summary>Can PixKit compress PDFs?</summary><p>Yes. Compress PDF can reduce image-heavy PDFs in your browser. The compressed PDF may contain image-based pages, so selectable text may be lost.</p></details>
+<details><summary>Can PixKit generate story images?</summary><p>Story → Scenes currently creates the character/world continuity plan and image prompts locally in your browser, without a paid AI API. Local open-source image generation will be connected separately.</p></details>\n<details><summary>Can PixKit compress PDFs?</summary><p>Yes. Compress PDF can reduce image-heavy PDFs in your browser. The compressed PDF may contain image-based pages, so selectable text may be lost.</p></details>
 </section>
 
   <footer class="site-footer">
@@ -236,11 +236,11 @@
 
 <script src="app1.js?v=13"></script>
 <script src="app2.js?v=12"></script>
-<script src="app3.js?v=8"></script>\n<script src="story.js?v=4"></script>
+<script src="app3.js?v=8"></script>\n<script src="story.js?v=5"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js?build=7").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?build=8").catch(function () {});
   });
   navigator.serviceWorker.addEventListener("controllerchange", function () {
     if (window.__pixkitReloaded) return;
