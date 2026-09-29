@@ -24,7 +24,7 @@
     const names = [];
     const animalHints = ['camel','fox','lion','tiger','elephant','deer','rabbit','wolf','bear','horse','dog','cat','monkey','bird','snake','goat','cow'];
     animalHints.forEach(animal => {
-      if (new RegExp('\\\\b' + animal + '\\\\b', 'i').test(story)) names.push(animal);
+      if (new RegExp('\\b' + animal + '\\b', 'i').test(story)) names.push(animal);
     });
     return {
       title: 'Story',
@@ -190,7 +190,7 @@
     }
   }
 
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
     const raw = text.value.trim();
     if (!raw) return setStatus('Please enter a story first.', true);
     const sentences = splitSentences(raw);
