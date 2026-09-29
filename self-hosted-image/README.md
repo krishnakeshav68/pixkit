@@ -86,3 +86,29 @@ Do not expose the engine token to browser JavaScript.
 - Add image storage rather than returning large base64 responses.
 - Add character-reference conditioning/LoRA support.
 - Add a second model adapter so FLUX and Qwen can be compared without changing PixKit's API.
+
+## Character-reference conditioning
+
+The engine accepts the same `referenceImages` field used by the PixKit API:
+
+```json
+{
+  "prompt": "A photorealistic cinematic camel walking through a desert at sunrise",
+  "quality": "low",
+  "referenceImages": ["data:image/jpeg;base64,..."]
+}
+```
+
+Reference images are applied through Diffusers IP-Adapter when configured. Diffusers documents IP-Adapter support for Flux and the `ip_adapter_image` pipeline input. citeturn0search4
+
+Configure a compatible adapter with:
+
+- `IP_ADAPTER_ID`
+- `IP_ADAPTER_WEIGHT`
+- Optional `IP_ADAPTER_IMAGE_ENCODER`
+- `IP_ADAPTER_SCALE` (default 0.65)
+
+**Important:** IP-Adapter checkpoints are tied to particular model architectures/checkpoints. Verify that the adapter is compatible with your `MODEL_ID`, and review the licenses for both the base model and adapter before using PixKit commercially. PixKit does not hard-code a particular adapter for that reason.
+
+If references are supplied without an adapter configured, the engine returns a clear error instead of silently ignoring the references.
+
