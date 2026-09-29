@@ -7,6 +7,17 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Image generation is not configured on the server." });
   }
 
+  const origin = req.headers.origin || "";
+  const allowedOrigins = (process.env.PIXKIT_ALLOWED_ORIGINS ||
+    "https://pixkit.world,https://www.pixkit.world,http://localhost:3000,http://localhost:5173")
+    .split(",")
+    .map(value => value.trim())
+    .filter(Boolean);
+
+  if (!allowedOrigins.includes(origin)) {
+    return res.status(403).json({ error: "This image-generation endpoint is not available from this origin." });
+  }
+
   try {
     const body = req.body || {};
     const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
