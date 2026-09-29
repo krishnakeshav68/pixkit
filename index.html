@@ -253,12 +253,14 @@ if ("serviceWorker" in navigator) {
   const buttons = {
     pdf: document.getElementById('tabBtnPdf'),
     compress: document.getElementById('tabBtnCompress'),
-    pdfCompress: document.getElementById('tabBtnPdfCompress')
+    pdfCompress: document.getElementById('tabBtnPdfCompress'),
+    story: document.getElementById('tabBtnStory')
   };
   const panels = {
     pdf: document.getElementById('tab-pdf'),
     compress: document.getElementById('tab-compress'),
-    pdfCompress: document.getElementById('tab-pdf-compress')
+    pdfCompress: document.getElementById('tab-pdf-compress'),
+    story: document.getElementById('tab-story')
   };
 
   function setActiveTab(name) {
@@ -280,6 +282,7 @@ if ("serviceWorker" in navigator) {
     if (button === buttons.pdf) setActiveTab('pdf');
     else if (button === buttons.compress) setActiveTab('compress');
     else if (button === buttons.pdfCompress) setActiveTab('pdfCompress');
+    else if (button === buttons.story) setActiveTab('story');
   }, true);
 
   setActiveTab('pdf');
