@@ -46,7 +46,7 @@ const PROVIDERS = {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.error || "Self-hosted image generation failed.");
+        throw new Error(data?.error || data?.detail || "Self-hosted image generation failed.");
       }
 
       if (!data?.image) throw new Error("The self-hosted provider returned no image.");
