@@ -175,9 +175,8 @@
   <section id="tab-story" role="tabpanel" aria-labelledby="tabBtnStory" style="display:none;">
     <div class="story-intro">
       <h2>Story → Text or Audio</h2>
-      <p>Choose what you have, then choose what you want to produce.</p>
+      <p>Choose what you have and what you want to produce.</p>
     </div>
-
     <div class="story-options">
       <label><span class="label-small">I have</span>
         <select id="storyInputMode">
@@ -192,19 +191,16 @@
         </select>
       </label>
     </div>
-
     <div id="storyTextInputWrap">
       <label class="story-field-label" for="storyText">Your story</label>
       <textarea id="storyText" class="story-textarea" rows="10" placeholder="Paste or type your story here..."></textarea>
     </div>
-
     <div id="storyAudioFileWrap" style="display:none;">
       <label class="story-field-label" for="storyAudioFile">Choose audio file</label>
       <input id="storyAudioFile" type="file" accept="audio/*">
       <div id="storyAudioFileInfo" class="story-audio-note"></div>
       <audio id="storyAudioPlayer" controls preload="metadata" style="width:100%;margin-top:10px;display:none;"></audio>
     </div>
-
     <div class="story-options">
       <label id="storyLanguageWrap" style="display:none;"><span class="label-small">Language</span>
         <select id="storyLanguage">
@@ -232,16 +228,14 @@
         </select>
       </label>
     </div>
-
     <div id="storyAudioControls" style="display:none;margin-top:16px;">
       <div class="story-audio-actions">
         <button class="primary" id="storyPlayBtn" type="button">Play narration</button>
         <button class="secondary-action" id="storyPauseBtn" type="button">Pause / Resume</button>
         <button class="secondary-action" id="storyStopBtn" type="button">Stop</button>
       </div>
-      <div class="story-audio-note">For text stories, narration uses the browser's built-in speech engine. For an audio file, the selected recording is played directly.</div>
+      <div class="story-audio-note">Text stories use browser speech. Audio files use the selected recording directly.</div>
     </div>
-
     <button class="primary story-primary" id="buildStoryBtn">Create output</button>
     <div class="status" id="storyStatus"></div>
     <div id="storyBible" class="story-bible" aria-live="polite"></div>
@@ -284,7 +278,7 @@
 <script src="app1.js?v=13"></script>
 <script src="app2.js?v=12"></script>
 <script src="app3.js?v=8"></script>
-<script src="story.js?v=11"></script>
+<script src="story.js?v=12"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
