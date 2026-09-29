@@ -174,7 +174,7 @@
   <section id="tab-story" role="tabpanel" aria-labelledby="tabBtnStory" style="display:none;">
     <div class="story-intro">
       <h2>Turn a story into scenes</h2>
-      <p>Start with a story, create visual scenes, and generate realistic scene images. Your narration can be added later when we move this workflow to video. Image generation uses the secure PixKit API when configured.</p>
+      <p>Start with a story, create visual scenes, and generate realistic scene images. Your narration can be added later when we move this workflow to video. Image generation uses the secure PixKit API when configured. Add a reference image for recurring characters to improve visual consistency.</p>
     </div>
     <label class="story-field-label" for="storyText">Your story</label>
     <textarea id="storyText" class="story-textarea" rows="10" placeholder="Paste your story here..."></textarea>
@@ -236,11 +236,11 @@
 
 <script src="app1.js?v=13"></script>
 <script src="app2.js?v=12"></script>
-<script src="app3.js?v=8"></script>\n<script src="story.js?v=3"></script>
+<script src="app3.js?v=8"></script>\n<script src="story.js?v=4"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js?build=6").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?build=7").catch(function () {});
   });
   navigator.serviceWorker.addEventListener("controllerchange", function () {
     if (window.__pixkitReloaded) return;
