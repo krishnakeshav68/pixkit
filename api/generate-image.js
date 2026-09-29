@@ -61,6 +61,7 @@ const PROVIDERS = {
   self_hosted: {
     envKey: "PIXKIT_SELF_HOSTED_IMAGE_URL",
     async generate({ prompt, quality, referenceImages }) {
+      if (referenceImages?.length) throw new Error('Character reference images are currently supported by the OpenAI image provider; the self-hosted adapter will add reference conditioning next.');
       const endpoint = process.env.PIXKIT_SELF_HOSTED_IMAGE_URL;
       const token = process.env.PIXKIT_SELF_HOSTED_IMAGE_TOKEN || "";
 
