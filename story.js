@@ -2,7 +2,6 @@
   const btn = document.getElementById('buildStoryBtn');
   const text = document.getElementById('storyText');
   const inputMode = document.getElementById('storyInputMode');
-  const textLabel = document.getElementById('storyTextLabel');
   const textInputWrap = document.getElementById('storyTextInputWrap');
   const audioFileWrap = document.getElementById('storyAudioFileWrap');
   const audioFile = document.getElementById('storyAudioFile');
@@ -138,7 +137,6 @@
     const audio = inputMode.value === 'audio';
     textInputWrap.style.display = audio ? 'none' : '';
     text.style.display = audio ? 'none' : '';
-    textLabel.style.display = audio ? 'none' : '';
     audioFileWrap.style.display = audio ? '' : 'none';
     if (!audio) resetAudioFile();
     else if (audioFile && audioFile.files[0]) loadAudioFile(audioFile.files[0]);
