@@ -236,11 +236,11 @@
 
 <script src="app1.js?v=13"></script>
 <script src="app2.js?v=12"></script>
-<script src="app3.js?v=8"></script>\n<script src="story.js?v=5"></script>
+<script src="app3.js?v=8"></script>\n<script src="story.js?v=6"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js?build=8").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?build=9").catch(function () {});
   });
   navigator.serviceWorker.addEventListener("controllerchange", function () {
     if (window.__pixkitReloaded) return;
