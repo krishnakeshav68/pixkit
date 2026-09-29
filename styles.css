@@ -141,3 +141,5 @@
 @media(max-width:520px){.story-bible-character{display:block}.story-bible-character strong{display:block;margin-bottom:3px}}
 
 .story-reference-label{display:block;margin-top:9px;font-size:11px;font-weight:600;color:var(--ink-soft)}.story-reference-input{display:block;width:100%;margin-top:5px;font:inherit;font-size:11px}.story-reference-status{display:block;margin-top:4px;font-size:10.5px;color:var(--teal)}
+
+.story-audio-actions{display:flex;gap:8px;flex-wrap:wrap}.story-audio-actions .secondary-action{margin-top:0}.story-audio-note{margin-top:8px;font-size:11px;color:var(--ink-soft);line-height:1.45}
