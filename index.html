@@ -184,38 +184,13 @@
         </select>
       </label>
     </div>
-    <label class="story-field-label" id="storyTextLabel" for="storyText">Your story</label>
-    <textarea id="storyText" class="story-textarea" rows="10" placeholder="Paste your story here..."></textarea>
-    <div id="storyAudioFileWrap" style="display:none;">
-      <label class="story-field-label" for="storyAudioFile">Audio file</label>
-      <input id="storyAudioFile" type="file" accept="audio/*">
-      <div id="storyAudioFileInfo" class="story-audio-note"></div>
-      <audio id="storyAudioPlayer" controls preload="metadata" style="width:100%;margin-top:10px;display:none;"></audio>
-    </div>
-    <div class="story-options">
-      <label><span class="label-small">Output</span>
+    <div class="story-format-row">
+      <label><span class="label-small">Output format</span>
         <select id="storyOutput">
           <option value="text">Text / scene plan</option>
           <option value="audio">Audio / read aloud</option>
         </select>
       </label>
-      <label><span class="label-small">Visual style</span>
-        <select id="storyStyle">
-          <option value="realistic cinematic">Realistic cinematic</option>
-          <option value="photorealistic">Photorealistic</option>
-          <option value="cinematic wildlife">Cinematic wildlife</option>
-          <option value="storybook realistic">Realistic storybook</option>
-        </select>
-      </label>
-      <label><span class="label-small">Scenes</span>
-        <select id="sceneCount">
-          <option value="auto">Automatic</option>
-          <option value="4">4 scenes</option>
-          <option value="6">6 scenes</option>
-          <option value="8">8 scenes</option>
-        </select>
-      </label>
-      <label id="storyLanguageWrap" style="display:none;"><span class="label-small">Language</span><select id="storyLanguage"><option value="auto">Auto detect</option><option value="hi-IN">Hindi</option><option value="en-IN">English (India)</option><option value="en-US">English (US)</option></select></label>
       <label id="storyVoiceWrap" style="display:none;"><span class="label-small">Voice</span><select id="storyVoice"></select></label>
     </div>
     <div id="storyAudioControls" style="display:none;margin-top:16px;">
@@ -267,7 +242,7 @@
 <script src="app1.js?v=13"></script>
 <script src="app2.js?v=12"></script>
 <script src="app3.js?v=8"></script>
-<script src="story.js?v=9"></script>
+<script src="story.js?v=10"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
