@@ -9,6 +9,7 @@
   const IMAGE_API = window.PIXKIT_IMAGE_API || '/api/generate-image';
   let currentScenes = [];
   let currentBible = null;
+  const characterReferences = new Map();
 
   function splitSentences(value) {
     return value.replace(/\s+/g, ' ').trim().match(/[^.!?।]+[.!?।]?/g) || [];
@@ -133,8 +134,9 @@
   }
 
   function renderBible(bible) {
+    characterReferences.clear();
     const characters = bible.characters.length
-      ? bible.characters.map(c => '<div class="story-bible-character"><strong>' + escapeHtml(c.name) + '</strong><span>' + escapeHtml(c.appearance) + '</span></div>').join('')
+      ? bible.characters.map(c => '<div class="story-bible-character"><strong>' + escapeHtml(c.name) + '</strong><span>' + escapeHtml(c.appearance) + '<label class="story-reference-label">Reference image<input class="story-reference-input" type="file" accept="image/png,image/jpeg,image/webp" data-character-id="' + escapeHtml(c.id) + '"></label><span class="story-reference-status" data-reference-status="' + escapeHtml(c.id) + '"></span></span></div>').join('')
       : '<p class="story-bible-empty">No recurring character was detected automatically. Scene prompts will still preserve the story world.</p>';
 
     bibleEl.innerHTML = '<div class="story-bible-head"><strong>Character &amp; world bible</strong><span>' +
@@ -162,6 +164,34 @@
     `).join('');
   }
 
+  async function prepareReference(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read the reference image.'));
+      reader.onload = () => {
+        const image = new Image();
+        image.onload = () => {
+          const scale = Math.min(1, 1536 / image.width, 1536 / image.height);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(image.width * scale));
+          canvas.height = Math.max(1, Math.round(image.height * scale));
+          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        image.onerror = () => reject(new Error('The reference image is not a supported image.'));
+        image.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function sceneReferences(scene) {
+    const ids = new Set((scene.characters || []).map(name => String(name).toLowerCase()));
+    return currentBible.characters
+      .filter(c => ids.has(String(c.name).toLowerCase()) && characterReferences.has(c.id))
+      .map(c => characterReferences.get(c.id));
+  }
+
   async function generateImage(button, scene) {
     const article = button.closest('.story-scene');
     const wrap = article.querySelector('[data-image-wrap]');
@@ -172,7 +202,7 @@
       const response = await fetch(IMAGE_API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: scene.visual, quality: 'low', provider: 'auto' })
+        body: JSON.stringify({ prompt: scene.visual, quality: 'low', provider: 'auto', referenceImages: sceneReferences(scene) })
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.image) throw new Error(data.error || 'Image generation failed.');
@@ -211,6 +241,21 @@
       setStatus('AI analysis was unavailable, so PixKit used local continuity rules. ' + (error.message || ''));
     } finally {
       btn.disabled = false;
+    }
+  });
+
+  bibleEl.addEventListener('change', async event => {
+    const input = event.target.closest('.story-reference-input');
+    if (!input || !input.files?.[0]) return;
+    const characterId = input.dataset.characterId;
+    const statusEl = bibleEl.querySelector('[data-reference-status="' + characterId + '"]');
+    if (statusEl) statusEl.textContent = ' Preparing…';
+    try {
+      characterReferences.set(characterId, await prepareReference(input.files[0]));
+      if (statusEl) statusEl.textContent = ' Reference ready for matching scenes.';
+    } catch (error) {
+      characterReferences.delete(characterId);
+      if (statusEl) statusEl.textContent = ' ' + (error.message || 'Reference failed.');
     }
   });
 
