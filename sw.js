@@ -1,4 +1,4 @@
-const CACHE_NAME = "pixkit-v10";
+const CACHE_NAME = "pixkit-v11";
 const APP_SHELL = [
   "./",
   "./index.html",
