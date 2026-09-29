@@ -173,12 +173,18 @@
 
   <section id="tab-story" role="tabpanel" aria-labelledby="tabBtnStory" style="display:none;">
     <div class="story-intro">
-      <h2>Turn a story into scenes</h2>
-      <p>Start with a story and create a scene plan entirely in your browser. PixKit builds local continuity prompts without calling a paid AI API. Image generation is intentionally off for now; a local open-source image model can be connected later.</p>
+      <h2>Story → Text or Audio</h2>
+      <p>Paste a story and PixKit can create a text scene plan or read the story aloud using your browser's built-in speech engine. Your text stays in the browser.</p>
     </div>
     <label class="story-field-label" for="storyText">Your story</label>
     <textarea id="storyText" class="story-textarea" rows="10" placeholder="Paste your story here..."></textarea>
     <div class="story-options">
+      <label><span class="label-small">Output</span>
+        <select id="storyOutput">
+          <option value="text">Text / scene plan</option>
+          <option value="audio">Audio / read aloud</option>
+        </select>
+      </label>
       <label><span class="label-small">Visual style</span>
         <select id="storyStyle">
           <option value="realistic cinematic">Realistic cinematic</option>
@@ -195,8 +201,17 @@
           <option value="8">8 scenes</option>
         </select>
       </label>
+      <label id="storyVoiceWrap" style="display:none;"><span class="label-small">Voice</span><select id="storyVoice"></select></label>
     </div>
-    <button class="primary story-primary" id="buildStoryBtn">Build scene plan</button>
+    <div id="storyAudioControls" style="display:none;margin-top:16px;">
+      <div class="story-audio-actions">
+        <button class="primary" id="storyPlayBtn" type="button">Play story</button>
+        <button class="secondary-action" id="storyPauseBtn" type="button">Pause / Resume</button>
+        <button class="secondary-action" id="storyStopBtn" type="button">Stop</button>
+      </div>
+      <div class="story-audio-note">Uses your device/browser's built-in text-to-speech. Available voices depend on your device and browser.</div>
+    </div>
+    <button class="primary story-primary" id="buildStoryBtn">Create output</button>
     <div class="status" id="storyStatus"></div>
     <div id="storyBible" class="story-bible" aria-live="polite"></div>
     <div id="storyScenes" class="story-scenes"></div>
@@ -237,7 +252,7 @@
 <script src="app1.js?v=13"></script>
 <script src="app2.js?v=12"></script>
 <script src="app3.js?v=8"></script>
-<script src="story.js?v=6"></script>
+<script src="story.js?v=7"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
