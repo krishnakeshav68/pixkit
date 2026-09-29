@@ -176,8 +176,22 @@
       <h2>Story → Text or Audio</h2>
       <p>Paste a story and PixKit can create a text scene plan or read the story aloud using your browser's built-in speech engine. Your text stays in the browser.</p>
     </div>
-    <label class="story-field-label" for="storyText">Your story</label>
+    <div class="story-input-mode">
+      <label><span class="label-small">Input</span>
+        <select id="storyInputMode">
+          <option value="text">Write / paste story</option>
+          <option value="audio">Select audio file</option>
+        </select>
+      </label>
+    </div>
+    <label class="story-field-label" id="storyTextLabel" for="storyText">Your story</label>
     <textarea id="storyText" class="story-textarea" rows="10" placeholder="Paste your story here..."></textarea>
+    <div id="storyAudioFileWrap" style="display:none;">
+      <label class="story-field-label" for="storyAudioFile">Audio file</label>
+      <input id="storyAudioFile" type="file" accept="audio/*">
+      <div id="storyAudioFileInfo" class="story-audio-note"></div>
+      <audio id="storyAudioPlayer" controls preload="metadata" style="width:100%;margin-top:10px;display:none;"></audio>
+    </div>
     <div class="story-options">
       <label><span class="label-small">Output</span>
         <select id="storyOutput">
@@ -252,7 +266,7 @@
 <script src="app1.js?v=13"></script>
 <script src="app2.js?v=12"></script>
 <script src="app3.js?v=8"></script>
-<script src="story.js?v=7"></script>
+<script src="story.js?v=8"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
