@@ -133,7 +133,7 @@
         <h3>Visual scene ${scene.number}</h3>
         <p>${escapeHtml(scene.narration)}</p>
         <div class="story-prompt"><strong>Image prompt:</strong> ${escapeHtml(scene.visual)}</div>
-        <div class="story-image-wrap"><div class="story-image-placeholder">Image generation is off: no paid API is being called.</div></div>
+        <div class="story-image-wrap"><div class="story-image-placeholder">Image generation is intentionally disabled in free local mode. A local open-source model can be connected later.</div></div>
         <div class="story-scene-actions">
           <button class="secondary-action story-copy" type="button" data-number="${scene.number}">Copy prompt</button>
         </div>
