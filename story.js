@@ -6,126 +6,106 @@
   const status = document.getElementById('storyStatus');
   const scenesEl = document.getElementById('storyScenes');
   const bibleEl = document.getElementById('storyBible');
-  const IMAGE_API = window.PIXKIT_IMAGE_API || '/api/generate-image';
   let currentScenes = [];
-  let currentBible = null;
-  const characterReferences = new Map();
+
+  const SUBJECTS = [
+    ['camel','camel'],['fox','fox'],['lion','lion'],['tiger','tiger'],['elephant','elephant'],
+    ['deer','deer'],['rabbit','rabbit'],['wolf','wolf'],['bear','bear'],['horse','horse'],
+    ['dog','dog'],['cat','cat'],['monkey','monkey'],['bird','bird'],['snake','snake'],
+    ['goat','goat'],['cow','cow'],['ऊँट','camel'],['लोमड़ी','fox'],['शेर','lion'],
+    ['बाघ','tiger'],['हाथी','elephant'],['हिरण','deer'],['खरगोश','rabbit'],['बंदर','monkey']
+  ];
 
   function splitSentences(value) {
     return value.replace(/\s+/g, ' ').trim().match(/[^.!?।]+[.!?।]?/g) || [];
   }
 
   function escapeHtml(value) {
-    return value.replace(/[&<>"']/g, ch => ({
+    return String(value || '').replace(/[&<>"']/g, ch => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
     }[ch]));
   }
 
+  function detectCharacters(story) {
+    const lower = story.toLowerCase();
+    const seen = new Set();
+    return SUBJECTS.filter(([word]) => lower.includes(word.toLowerCase())).map(([word, species]) => {
+      const key = species.toLowerCase();
+      if (seen.has(key)) return null;
+      seen.add(key);
+      return {
+        id: 'character-' + seen.size,
+        name: word,
+        species,
+        age: 'consistent throughout the story',
+        appearance: 'Realistic ' + species + ' with consistent proportions, colors, face and distinctive markings in every scene.',
+        clothing: 'None unless the story explicitly establishes clothing.',
+        personality: 'Keep behavior consistent with the story.',
+        continuity: 'Do not redesign, recolor, age or replace this character between scenes.'
+      };
+    }).filter(Boolean).slice(0, 10);
+  }
+
   function localBible(story) {
-    const names = [];
-    const animalHints = ['camel','fox','lion','tiger','elephant','deer','rabbit','wolf','bear','horse','dog','cat','monkey','bird','snake','goat','cow'];
-    animalHints.forEach(animal => {
-      if (new RegExp('\\b' + animal + '\\b', 'i').test(story)) names.push(animal);
-    });
     return {
       title: 'Story',
       summary: story.slice(0, 240),
-      characters: names.slice(0, 10).map((name, index) => ({
-        id: 'character-' + (index + 1),
-        name,
-        species: name,
-        age: 'consistent age throughout the story',
-        appearance: 'Keep this character visually identical across every scene; preserve realistic anatomy, proportions, colors and distinctive markings.',
-        clothing: 'None unless established by the story.',
-        personality: 'As established by the story.',
-        continuity: 'Do not redesign, recolor, age, or replace this character between scenes.'
-      })),
+      characters: detectCharacters(story),
       locations: [],
       world: {
-        setting: 'As established by the story.',
-        timePeriod: 'As established by the story.',
-        season: 'As established by the story.',
-        weather: 'As established by the story.',
+        setting: 'Use the setting described by the story and preserve it between connected scenes.',
+        timePeriod: 'Keep the same story-defined time period.',
+        season: 'Keep the same season unless the narration changes it.',
+        weather: 'Keep weather continuous unless the narration changes it.',
         visualRules: ['Maintain realistic cinematic continuity across all scenes.']
       },
+      visualStyle: style.value,
       scenes: []
     };
   }
 
-  async function analyzeStory(story) {
-    const response = await fetch('/api/analyze-story', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        story,
-        style: style.value,
-        sceneCount: count.value
-      })
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.analysis) throw new Error(data.error || 'Story analysis failed.');
-    return data.analysis;
-  }
-
   function biblePrompt(bible) {
     const characterText = bible.characters.length
-      ? bible.characters.map(c => [
-          c.name + ' (' + c.species + ', ' + c.age + ')',
-          'appearance: ' + c.appearance,
-          'clothing: ' + c.clothing,
-          'personality: ' + c.personality,
-          'continuity: ' + c.continuity
-        ].join('; ')).join(' | ')
-      : 'No recurring character was identified; preserve recurring subjects consistently from scene to scene.';
-    const locationText = (bible.locations || []).map(l =>
-      l.name + ': ' + l.description + '. Continuity: ' + l.continuity
-    ).join(' | ');
-    const world = bible.world || {};
+      ? bible.characters.map(c => c.name + ' (' + c.species + '): ' + c.appearance + ' ' + c.continuity).join(' | ')
+      : 'Preserve every recurring person, animal or object consistently from scene to scene.';
     return [
       'CHARACTER AND WORLD BIBLE.',
       'Visual style: ' + bible.visualStyle + '.',
       'Characters: ' + characterText,
-      locationText ? 'Locations: ' + locationText : '',
-      'World setting: ' + (world.setting || 'story-defined') + '.',
-      'Time period: ' + (world.timePeriod || 'story-defined') + '.',
-      'Season: ' + (world.season || 'story-defined') + '.',
-      'Weather: ' + (world.weather || 'story-defined') + '.',
-      'Visual rules: ' + (world.visualRules || []).join(' '),
-      'Keep character identity, anatomy, wardrobe, environment and visual language consistent throughout.'
-    ].filter(Boolean).join(' ');
+      'World: ' + bible.world.setting,
+      'Continuity: ' + bible.world.visualRules.join(' '),
+      'Keep identity, anatomy, environment and visual language consistent throughout.'
+    ].join(' ');
   }
 
   function makeScenes(sentences, wanted, bible) {
-    const analyzed = Array.isArray(bible.scenes) ? bible.scenes.filter(s => s && s.narration) : [];
-    if (analyzed.length) {
-      return analyzed.map((scene, index) => ({
-        number: scene.number || index + 1,
-        narration: scene.narration,
-        visual: [
-          style.value + ' cinematic scene',
-          scene.visualDirection || scene.action || scene.narration,
-          'Characters present: ' + (scene.characters || []).join(', ') + '.',
-          scene.location ? 'Location: ' + scene.location + '.' : '',
-          biblePrompt(bible),
-          'Photorealistic live-action look, natural lighting, believable anatomy and textures, clear subject action, cinematic composition, realistic environment. No text, captions, logos, or cartoon illustration.'
-        ].filter(Boolean).join(' ')
-      }));
-    }
-
     const n = wanted === 'auto'
       ? Math.max(3, Math.min(8, Math.ceil(sentences.length / 2)))
       : Number(wanted);
-    const groups = Array.from({ length: n }, () => []);
+    const groups = Array.from({ length: Math.min(n, sentences.length) }, () => []);
     sentences.forEach((sentence, index) => {
-      groups[Math.min(n - 1, Math.floor(index * n / sentences.length))].push(sentence.trim());
+      groups[Math.min(groups.length - 1, Math.floor(index * groups.length / sentences.length))].push(sentence.trim());
     });
     const continuity = biblePrompt(bible);
-    return groups.filter(group => group.length).map((group, index) => ({
-      number: index + 1,
-      narration: group.join(' '),
-      visual: [style.value + ' cinematic scene', group.join(' '), continuity,
-        'Photorealistic live-action look, natural lighting, believable anatomy and textures, clear subject action, cinematic composition, realistic environment. No text, captions, logos, or cartoon illustration.'].join('. ')
-    }));
+    return groups.filter(Boolean).filter(group => group.length).map((group, index) => {
+      const narration = group.join(' ');
+      const lower = narration.toLowerCase();
+      const characters = bible.characters.filter(c =>
+        lower.includes(c.name.toLowerCase()) || lower.includes(c.species.toLowerCase())
+      ).map(c => c.name);
+      return {
+        number: index + 1,
+        narration,
+        characters,
+        visual: [
+          style.value + ' cinematic scene',
+          narration,
+          characters.length ? 'Characters present: ' + characters.join(', ') : '',
+          continuity,
+          'Photorealistic live-action look, natural lighting, believable anatomy and textures, clear subject action, cinematic composition, realistic environment. No text, captions, logos or cartoon illustration.'
+        ].filter(Boolean).join('. ')
+      };
+    });
   }
 
   function setStatus(message, error) {
@@ -134,12 +114,10 @@
   }
 
   function renderBible(bible) {
-    characterReferences.clear();
     const characters = bible.characters.length
-      ? bible.characters.map(c => '<div class="story-bible-character"><strong>' + escapeHtml(c.name) + '</strong><span>' + escapeHtml(c.appearance) + '<label class="story-reference-label">Reference image<input class="story-reference-input" type="file" accept="image/png,image/jpeg,image/webp" data-character-id="' + escapeHtml(c.id) + '"></label><span class="story-reference-status" data-reference-status="' + escapeHtml(c.id) + '"></span></span></div>').join('')
-      : '<p class="story-bible-empty">No recurring character was detected automatically. Scene prompts will still preserve the story world.</p>';
-
-    bibleEl.innerHTML = '<div class="story-bible-head"><strong>Character &amp; world bible</strong><span>' +
+      ? bible.characters.map(c => '<div class="story-bible-character"><strong>' + escapeHtml(c.name) + '</strong><span>' + escapeHtml(c.appearance) + '</span></div>').join('')
+      : '<p class="story-bible-empty">No known recurring animal was detected automatically. PixKit will still preserve the story text and continuity instructions in every scene prompt.</p>';
+    bibleEl.innerHTML = '<div class="story-bible-head"><strong>Local character &amp; world bible</strong><span>' +
       bible.characters.length + ' recurring subject' + (bible.characters.length === 1 ? '' : 's') + '</span></div>' +
       '<div class="story-bible-list">' + characters + '</div>';
   }
@@ -150,122 +128,31 @@
       <article class="story-scene" data-scene="${scene.number}">
         <div class="story-scene-head">
           <span class="story-scene-num">Scene ${scene.number}</span>
-          <span class="story-scene-time">Narration segment</span>
+          <span class="story-scene-time">Local browser mode</span>
         </div>
         <h3>Visual scene ${scene.number}</h3>
         <p>${escapeHtml(scene.narration)}</p>
         <div class="story-prompt"><strong>Image prompt:</strong> ${escapeHtml(scene.visual)}</div>
-        <div class="story-image-wrap" data-image-wrap><div class="story-image-placeholder">Image will appear here</div></div>
+        <div class="story-image-wrap"><div class="story-image-placeholder">Image generation is off: no paid API is being called.</div></div>
         <div class="story-scene-actions">
-          <button class="secondary-action story-generate" type="button" data-number="${scene.number}">Generate image</button>
           <button class="secondary-action story-copy" type="button" data-number="${scene.number}">Copy prompt</button>
         </div>
       </article>
     `).join('');
   }
 
-  async function prepareReference(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error('Could not read the reference image.'));
-      reader.onload = () => {
-        const image = new Image();
-        image.onload = () => {
-          const scale = Math.min(1, 1536 / image.width, 1536 / image.height);
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.max(1, Math.round(image.width * scale));
-          canvas.height = Math.max(1, Math.round(image.height * scale));
-          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', 0.85));
-        };
-        image.onerror = () => reject(new Error('The reference image is not a supported image.'));
-        image.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function sceneReferences(scene) {
-    const ids = new Set((scene.characters || []).map(name => String(name).toLowerCase()));
-    return currentBible.characters
-      .filter(c => ids.has(String(c.name).toLowerCase()) && characterReferences.has(c.id))
-      .map(c => characterReferences.get(c.id));
-  }
-
-  async function generateImage(button, scene) {
-    const article = button.closest('.story-scene');
-    const wrap = article.querySelector('[data-image-wrap]');
-    button.disabled = true;
-    button.textContent = 'Generating…';
-    wrap.innerHTML = '<div class="story-image-placeholder">Creating the scene image…</div>';
-    try {
-      const response = await fetch(IMAGE_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: scene.visual, quality: 'low', provider: 'auto', referenceImages: sceneReferences(scene) })
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.image) throw new Error(data.error || 'Image generation failed.');
-      const image = document.createElement('img');
-      image.className = 'story-generated-image';
-      image.alt = 'Generated visual for scene ' + scene.number;
-      image.src = data.image;
-      wrap.replaceChildren(image);
-      button.textContent = 'Regenerate image';
-    } catch (error) {
-      wrap.innerHTML = '<div class="story-image-placeholder story-image-error">' + escapeHtml(error.message || 'Could not generate this image.') + '</div>';
-      button.textContent = 'Try again';
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  btn.addEventListener('click', async () => {
+  btn.addEventListener('click', () => {
     const raw = text.value.trim();
     if (!raw) return setStatus('Please enter a story first.', true);
     const sentences = splitSentences(raw);
     if (sentences.length < 2) return setStatus('Please enter at least two sentences so the story can be divided into scenes.', true);
-    setStatus('Analyzing story and building the visual bible…');
-    btn.disabled = true;
-    try {
-      currentBible = await analyzeStory(raw);
-      currentBible.visualStyle = style.value;
-      renderBible(currentBible);
-      renderScenes(makeScenes(sentences, count.value, currentBible));
-      setStatus(currentScenes.length + ' scenes created with an AI character/world bible. Generate an image for any scene.');
-    } catch (error) {
-      currentBible = localBible(raw);
-      currentBible.visualStyle = style.value;
-      renderBible(currentBible);
-      renderScenes(makeScenes(sentences, count.value, currentBible));
-      setStatus('AI analysis was unavailable, so PixKit used local continuity rules. ' + (error.message || ''));
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
-  bibleEl.addEventListener('change', async event => {
-    const input = event.target.closest('.story-reference-input');
-    if (!input || !input.files?.[0]) return;
-    const characterId = input.dataset.characterId;
-    const statusEl = bibleEl.querySelector('[data-reference-status="' + characterId + '"]');
-    if (statusEl) statusEl.textContent = ' Preparing…';
-    try {
-      characterReferences.set(characterId, await prepareReference(input.files[0]));
-      if (statusEl) statusEl.textContent = ' Reference ready for matching scenes.';
-    } catch (error) {
-      characterReferences.delete(characterId);
-      if (statusEl) statusEl.textContent = ' ' + (error.message || 'Reference failed.');
-    }
+    const bible = localBible(raw);
+    renderBible(bible);
+    renderScenes(makeScenes(sentences, count.value, bible));
+    setStatus(currentScenes.length + ' scenes created entirely in your browser. No AI API or paid service was called.');
   });
 
   scenesEl.addEventListener('click', async event => {
-    const generateButton = event.target.closest('.story-generate');
-    if (generateButton) {
-      const scene = currentScenes.find(item => item.number === Number(generateButton.dataset.number));
-      if (scene) await generateImage(generateButton, scene);
-      return;
-    }
     const copyButton = event.target.closest('.story-copy');
     if (!copyButton) return;
     const scene = currentScenes.find(item => item.number === Number(copyButton.dataset.number));
