@@ -84,3 +84,7 @@ Optional environment variable:
 The browser never receives the OpenAI key. If story analysis is unavailable, the Story → Scenes UI falls back to local continuity rules.
 
 The analyzer request uses `store: false` so the application does not ask the Responses API to store the response. OpenAI's current Responses API supports structured JSON output through `text.format.type=json_schema`.
+
+## Character references
+
+Story → Scenes can attach up to 16 prepared character reference images to a scene. The OpenAI image provider sends these to the GPT Image 2 edit endpoint, which supports multiple input images and high-fidelity image inputs. The self-hosted adapter currently rejects reference images rather than silently ignoring them; its next upgrade will add an IP-Adapter/ControlNet-style reference-conditioning path.
