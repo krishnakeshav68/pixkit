@@ -23,7 +23,7 @@ with:
 
 The endpoint returns a JPEG data URL.
 
-The first MVP intentionally defaults to low-quality landscape images to keep generation cost down. OpenAI's current image API supports landscape generation and configurable quality; higher quality generally costs more. citeturn0search0turn0search8
+The first MVP intentionally defaults to low-quality landscape images to keep generation cost down. OpenAI's current image API supports landscape generation and configurable quality; higher quality generally costs more.
 
 Do not put `OPENAI_API_KEY` in `index.html`, `story.js`, or any browser-side JavaScript.
 
