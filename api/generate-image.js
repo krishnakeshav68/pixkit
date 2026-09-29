@@ -1,7 +1,36 @@
 const PROVIDERS = {
   openai: {
     envKey: "OPENAI_API_KEY",
-    async generate({ prompt, quality }) {
+    async generate({ prompt, quality, referenceImages }) {
+      if (referenceImages?.length) {
+        const form = new FormData();
+        form.append("model", process.env.PIXKIT_OPENAI_IMAGE_MODEL || "gpt-image-2");
+        form.append("prompt", prompt);
+        form.append("size", "1536x1024");
+        form.append("quality", quality);
+        form.append("output_format", "jpeg");
+        form.append("output_compression", "80");
+
+        referenceImages.slice(0, 16).forEach((dataUrl, index) => {
+          const match = /^data:(image\/(?:png|jpeg|webp));base64,(.+)$/.exec(dataUrl || "");
+          if (!match) return;
+          const bytes = Buffer.from(match[2], "base64");
+          const blob = new Blob([bytes], { type: match[1] });
+          form.append("image[]", blob, `reference-${index + 1}.${match[1] === "image/png" ? "png" : match[1] === "image/webp" ? "webp" : "jpg"}`);
+        });
+
+        const response = await fetch("https://api.openai.com/v1/images/edits", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${process.env.OPENAI_API_KEY}` },
+          body: form
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error?.message || "OpenAI image edit failed.");
+        const image = data?.data?.[0];
+        if (!image?.b64_json) throw new Error("The image provider returned no image.");
+        return `data:image/jpeg;base64,${image.b64_json}`;
+      }
+
       const response = await fetch("https://api.openai.com/v1/images/generations", {
         method: "POST",
         headers: {
@@ -31,7 +60,7 @@ const PROVIDERS = {
 
   self_hosted: {
     envKey: "PIXKIT_SELF_HOSTED_IMAGE_URL",
-    async generate({ prompt, quality }) {
+    async generate({ prompt, quality, referenceImages }) {
       const endpoint = process.env.PIXKIT_SELF_HOSTED_IMAGE_URL;
       const token = process.env.PIXKIT_SELF_HOSTED_IMAGE_TOKEN || "";
 
@@ -41,7 +70,7 @@ const PROVIDERS = {
           "Content-Type": "application/json",
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({ prompt, quality })
+        body: JSON.stringify({ prompt, quality, referenceImages: referenceImages || [] })
       });
 
       const data = await response.json();
@@ -94,13 +123,14 @@ export default async function handler(req, res) {
   try {
     const body = req.body || {};
     const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
+    const referenceImages = Array.isArray(body.referenceImages) ? body.referenceImages.filter(value => typeof value === "string" && value.length <= 5_000_000).slice(0, 16) : [];
     const quality = ["low", "medium", "high"].includes(body.quality) ? body.quality : "low";
     const provider = chooseProvider(typeof body.provider === "string" ? body.provider : "auto");
 
     if (!prompt) return res.status(400).json({ error: "A prompt is required." });
     if (prompt.length > 8000) return res.status(400).json({ error: "Prompt is too long." });
 
-    const image = await PROVIDERS[provider].generate({ prompt, quality });
+    const image = await PROVIDERS[provider].generate({ prompt, quality, referenceImages });
     return res.status(200).json({ image, provider });
   } catch (error) {
     const message = error?.message || "Unable to generate the image right now.";
