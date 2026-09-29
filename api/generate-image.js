@@ -1,20 +1,93 @@
+const PROVIDERS = {
+  openai: {
+    envKey: "OPENAI_API_KEY",
+    async generate({ prompt, quality }) {
+      const response = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: process.env.PIXKIT_OPENAI_IMAGE_MODEL || "gpt-image-2",
+          prompt,
+          size: "1536x1024",
+          quality,
+          output_format: "jpeg",
+          output_compression: 80
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error?.message || "OpenAI image generation failed.");
+      }
+
+      const image = data?.data?.[0];
+      if (!image?.b64_json) throw new Error("The image provider returned no image.");
+      return `data:image/jpeg;base64,${image.b64_json}`;
+    }
+  },
+
+  self_hosted: {
+    envKey: "PIXKIT_SELF_HOSTED_IMAGE_URL",
+    async generate({ prompt, quality }) {
+      const endpoint = process.env.PIXKIT_SELF_HOSTED_IMAGE_URL;
+      const token = process.env.PIXKIT_SELF_HOSTED_IMAGE_TOKEN || "";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ prompt, quality })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || "Self-hosted image generation failed.");
+      }
+
+      if (!data?.image) throw new Error("The self-hosted provider returned no image.");
+      return data.image;
+    }
+  }
+};
+
+function allowedOrigins() {
+  return (process.env.PIXKIT_ALLOWED_ORIGINS ||
+    "https://pixkit.world,https://www.pixkit.world,http://localhost:3000,http://localhost:5173")
+    .split(",")
+    .map(value => value.trim())
+    .filter(Boolean);
+}
+
+function chooseProvider(requested) {
+  const mode = (requested || process.env.PIXKIT_IMAGE_PROVIDER || "auto").toLowerCase();
+
+  if (mode === "self_hosted") {
+    if (process.env.PIXKIT_SELF_HOSTED_IMAGE_URL) return "self_hosted";
+    throw new Error("Self-hosted image generation is not configured.");
+  }
+
+  if (mode === "openai") {
+    if (process.env.OPENAI_API_KEY) return "openai";
+    throw new Error("OpenAI image generation is not configured.");
+  }
+
+  if (process.env.PIXKIT_SELF_HOSTED_IMAGE_URL) return "self_hosted";
+  if (process.env.OPENAI_API_KEY) return "openai";
+  throw new Error("No image-generation provider is configured.");
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (!process.env.OPENAI_API_KEY) {
-    return res.status(500).json({ error: "Image generation is not configured on the server." });
-  }
-
   const origin = req.headers.origin || "";
-  const allowedOrigins = (process.env.PIXKIT_ALLOWED_ORIGINS ||
-    "https://pixkit.world,https://www.pixkit.world,http://localhost:3000,http://localhost:5173")
-    .split(",")
-    .map(value => value.trim())
-    .filter(Boolean);
-
-  if (!allowedOrigins.includes(origin)) {
+  if (!allowedOrigins().includes(origin)) {
     return res.status(403).json({ error: "This image-generation endpoint is not available from this origin." });
   }
 
@@ -22,46 +95,16 @@ export default async function handler(req, res) {
     const body = req.body || {};
     const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
     const quality = ["low", "medium", "high"].includes(body.quality) ? body.quality : "low";
+    const provider = chooseProvider(typeof body.provider === "string" ? body.provider : "auto");
 
-    if (!prompt) {
-      return res.status(400).json({ error: "A prompt is required." });
-    }
-    if (prompt.length > 8000) {
-      return res.status(400).json({ error: "Prompt is too long." });
-    }
+    if (!prompt) return res.status(400).json({ error: "A prompt is required." });
+    if (prompt.length > 8000) return res.status(400).json({ error: "Prompt is too long." });
 
-    const response = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-image-2",
-        prompt,
-        size: "1536x1024",
-        quality,
-        output_format: "jpeg",
-        output_compression: 80
-      })
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: data?.error?.message || "Image generation failed."
-      });
-    }
-
-    const image = data?.data?.[0];
-    if (!image?.b64_json) {
-      return res.status(502).json({ error: "The image provider returned no image." });
-    }
-
-    return res.status(200).json({
-      image: `data:image/jpeg;base64,${image.b64_json}`
-    });
+    const image = await PROVIDERS[provider].generate({ prompt, quality });
+    return res.status(200).json({ image, provider });
   } catch (error) {
-    return res.status(500).json({ error: "Unable to generate the image right now." });
+    const message = error?.message || "Unable to generate the image right now.";
+    const configurationError = /not configured|No image-generation provider/.test(message);
+    return res.status(configurationError ? 500 : 502).json({ error: message });
   }
 }
