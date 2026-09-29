@@ -1,8 +1,140 @@
 (function () {
-  const btn=document.getElementById('buildStoryBtn'), text=document.getElementById('storyText'), style=document.getElementById('storyStyle'), count=document.getElementById('sceneCount'), status=document.getElementById('storyStatus'), scenesEl=document.getElementById('storyScenes');
-  function splitSentences(v){return v.replace(/\s+/g,' ').trim().match(/[^.!?।]+[.!?।]?/g)||[];}
-  function escapeHtml(s){return s.replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));}
-  function makeScenes(ss,w){const n=w==='auto'?Math.max(3,Math.min(8,Math.ceil(ss.length/2))):Number(w);const g=Array.from({length:n},()=>[]);ss.forEach((s,i)=>g[Math.min(n-1,Math.floor(i*n/ss.length))].push(s.trim()));return g.filter(x=>x.length).map((x,i)=>({number:i+1,narration:x.join(' '),visual:style.value+'. '+x.join(' ')+' Show clear natural action, cinematic composition, consistent characters and environment.'}));}
-  btn.addEventListener('click',()=>{const raw=text.value.trim();if(!raw){status.textContent='Please enter a story first.';status.classList.add('err');return;}const ss=splitSentences(raw);if(ss.length<2){status.textContent='Please enter at least two sentences so the story can be divided into scenes.';status.classList.add('err');return;}status.classList.remove('err');const scenes=makeScenes(ss,count.value);scenesEl.innerHTML=scenes.map(s=>'<article class="story-scene"><div class="story-scene-head"><span class="story-scene-num">Scene '+s.number+'</span><span class="story-scene-time">Narration segment</span></div><h3>Visual scene '+s.number+'</h3><p>'+escapeHtml(s.narration)+'</p><div class="story-prompt"><strong>Image prompt:</strong> '+escapeHtml(s.visual)+'</div><button class="secondary-action story-copy" type="button" data-prompt="'+escapeHtml(s.visual)+'">Copy prompt</button></article>').join('');status.textContent=scenes.length+' scenes created. This first version creates the scene plan locally; no story is uploaded.';});
-  scenesEl.addEventListener('click',async e=>{const b=e.target.closest('.story-copy');if(!b)return;try{await navigator.clipboard.writeText(b.getAttribute('data-prompt'));b.textContent='Copied';setTimeout(()=>b.textContent='Copy prompt',1000);}catch(_){} });
+  const btn = document.getElementById('buildStoryBtn');
+  const text = document.getElementById('storyText');
+  const style = document.getElementById('storyStyle');
+  const count = document.getElementById('sceneCount');
+  const status = document.getElementById('storyStatus');
+  const scenesEl = document.getElementById('storyScenes');
+
+  const IMAGE_API = window.PIXKIT_IMAGE_API || '/api/generate-image';
+
+  function splitSentences(value) {
+    return value.replace(/\s+/g, ' ').trim().match(/[^.!?।]+[.!?।]?/g) || [];
+  }
+
+  function escapeHtml(value) {
+    return value.replace(/[&<>"']/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    }[ch]));
+  }
+
+  function makeScenes(sentences, wanted) {
+    const n = wanted === 'auto'
+      ? Math.max(3, Math.min(8, Math.ceil(sentences.length / 2)))
+      : Number(wanted);
+
+    const groups = Array.from({ length: n }, () => []);
+    sentences.forEach((sentence, index) => {
+      groups[Math.min(n - 1, Math.floor(index * n / sentences.length))].push(sentence.trim());
+    });
+
+    return groups.filter(group => group.length).map((group, index) => ({
+      number: index + 1,
+      narration: group.join(' '),
+      visual: [
+        style.value + ' cinematic scene',
+        group.join(' '),
+        'Photorealistic live-action look, natural lighting, believable anatomy and textures, clear subject action, cinematic composition, realistic environment, consistent characters and visual continuity with the other scenes. No text, captions, logos, or cartoon illustration.'
+      ].join('. ')
+    }));
+  }
+
+  function setStatus(message, error) {
+    status.textContent = message;
+    status.classList.toggle('err', Boolean(error));
+  }
+
+  function renderScenes(scenes) {
+    scenesEl.innerHTML = scenes.map(scene => `
+      <article class="story-scene" data-scene="${scene.number}">
+        <div class="story-scene-head">
+          <span class="story-scene-num">Scene ${scene.number}</span>
+          <span class="story-scene-time">Narration segment</span>
+        </div>
+        <h3>Visual scene ${scene.number}</h3>
+        <p>${escapeHtml(scene.narration)}</p>
+        <div class="story-prompt"><strong>Image prompt:</strong> ${escapeHtml(scene.visual)}</div>
+        <div class="story-image-wrap" data-image-wrap>
+          <div class="story-image-placeholder">Image will appear here</div>
+        </div>
+        <div class="story-scene-actions">
+          <button class="secondary-action story-generate" type="button" data-number="${scene.number}">Generate image</button>
+          <button class="secondary-action story-copy" type="button" data-prompt="${escapeHtml(scene.visual)}">Copy prompt</button>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  async function generateImage(button, scene) {
+    const article = button.closest('.story-scene');
+    const wrap = article.querySelector('[data-image-wrap]');
+    button.disabled = true;
+    button.textContent = 'Generating…';
+    wrap.innerHTML = '<div class="story-image-placeholder">Creating the scene image…</div>';
+
+    try {
+      const response = await fetch(IMAGE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: scene.visual, quality: 'low' })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.image) {
+        throw new Error(data.error || 'Image generation failed.');
+      }
+
+      const image = document.createElement('img');
+      image.className = 'story-generated-image';
+      image.alt = 'Generated visual for scene ' + scene.number;
+      image.src = data.image;
+      wrap.replaceChildren(image);
+
+      button.textContent = 'Regenerate image';
+    } catch (error) {
+      wrap.innerHTML = '<div class="story-image-placeholder story-image-error">' +
+        escapeHtml(error.message || 'Could not generate this image.') + '</div>';
+      button.textContent = 'Try again';
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  btn.addEventListener('click', () => {
+    const raw = text.value.trim();
+    if (!raw) {
+      setStatus('Please enter a story first.', true);
+      return;
+    }
+
+    const sentences = splitSentences(raw);
+    if (sentences.length < 2) {
+      setStatus('Please enter at least two sentences so the story can be divided into scenes.', true);
+      return;
+    }
+
+    setStatus('');
+    const scenes = makeScenes(sentences, count.value);
+    renderScenes(scenes);
+    setStatus(scenes.length + ' scenes created. Generate an image for any scene.');
+  });
+
+  scenesEl.addEventListener('click', async event => {
+    const generateButton = event.target.closest('.story-generate');
+    if (generateButton) {
+      const number = Number(generateButton.dataset.number);
+      const article = generateButton.closest('.story-scene');
+      const prompt = article.querySelector('.story-prompt').textContent.replace(/^Image prompt:\s*/i, '');
+      await generateImage(generateButton, { number, visual: prompt });
+      return;
+    }
+
+    const copyButton = event.target.closest('.story-copy');
+    if (!copyButton) return;
+
+    try {
+      await navigator.clipboard.writeText(copyButton.getAttribute('data-prompt'));
+      copyButton.textContent = 'Copied';
+      setTimeout(() => copyButton.textContent = 'Copy prompt', 1000);
+    } catch (_) {}
+  });
 })();
