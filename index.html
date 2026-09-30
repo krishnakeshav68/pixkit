@@ -199,10 +199,10 @@
     </div>
 
     <div id="storyAudioFileWrap" class="story-input-panel" style="display:none;">
-      <label class="story-field-label" for="storyAudioFile">Choose audio file</label>
+      <div id="storyTranscribeNote" class="story-audio-note">Audio can be transcribed locally in your browser. The first use downloads a speech model.</div><label class="story-field-label" for="storyAudioFile">Choose audio file</label>
       <input id="storyAudioFile" type="file" accept="audio/*">
       <div id="storyAudioFileInfo" class="story-audio-note"></div>
-      <audio id="storyAudioPlayer" controls preload="metadata" style="width:100%;margin-top:10px;display:none;"></audio>
+      <audio id="storyAudioPlayer" controls preload="metadata" style="width:100%;margin-top:10px;display:none;"></audio><div class="story-audio-actions" style="margin-top:12px;"><button class="secondary-action" id="storyTranscribeBtn" type="button">Transcribe audio</button></div><div id="storyTranscribeProgress" class="story-audio-note"></div>
     </div>
 
     <div class="story-options" style="margin-top:14px;">
@@ -284,7 +284,7 @@
 <script src="app1.js?v=13"></script>
 <script src="app2.js?v=12"></script>
 <script src="app3.js?v=8"></script>
-<script src="story.js?v=14"></script>
+<script src="story.js?v=15"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
