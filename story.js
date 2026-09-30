@@ -7,6 +7,8 @@
   const audioFile = document.getElementById('storyAudioFile');
   const audioFileInfo = document.getElementById('storyAudioFileInfo');
   const audioPlayer = document.getElementById('storyAudioPlayer');
+  const transcribeBtn = document.getElementById('storyTranscribeBtn');
+  const transcribeProgress = document.getElementById('storyTranscribeProgress');
   const style = document.getElementById('storyStyle');
   const count = document.getElementById('sceneCount');
   const output = document.getElementById('storyOutput');
@@ -157,6 +159,53 @@
     setStatus('Audio file selected. It stays on your device.');
   }
 
+  async function transcribeAudioLocally() {
+    const file = audioFile.files && audioFile.files[0];
+    if (!file) return setStatus('Please select an audio file first.', true);
+    transcribeBtn.disabled = true;
+    transcribeProgress.textContent = 'Loading local speech-to-text model…';
+    try {
+      const mod = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm');
+      const { pipeline, env } = mod;
+      env.allowLocalModels = false;
+      env.useBrowserCache = true;
+      const transcriber = await pipeline('automatic-speech-recognition', 'onnx-community/whisper-tiny', { device: 'wasm' });
+      transcribeProgress.textContent = 'Transcribing audio locally…';
+      const url = URL.createObjectURL(file);
+      const response = await fetch(url);
+      const buffer = await response.arrayBuffer();
+      URL.revokeObjectURL(url);
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) throw new Error('Audio decoding not supported');
+      const ctx = new AC();
+      const decoded = await ctx.decodeAudioData(buffer);
+      const sampleRate = 16000;
+      const frames = Math.max(1, Math.ceil(decoded.duration * sampleRate));
+      const offline = new OfflineAudioContext(1, frames, sampleRate);
+      const source = offline.createBufferSource();
+      source.buffer = decoded;
+      source.connect(offline.destination);
+      source.start(0);
+      const rendered = await offline.startRendering();
+      const data = rendered.getChannelData(0);
+      const lang = languageSel.value === 'auto' ? undefined : languageSel.value.slice(0,2);
+      const result = await transcriber(data, { language: lang, task: 'transcribe', chunk_length_s: 30, stride_length_s: 5 });
+      text.value = String(result.text || '').trim();
+      inputMode.value = 'text';
+      updateInputMode();
+      output.value = 'text';
+      output.dispatchEvent(new Event('change'));
+      transcribeProgress.textContent = text.value ? 'Done. You can edit the transcription and create the scene plan.' : 'No speech detected.';
+      if (text.value) setStatus('Audio transcribed locally. The audio was not sent to a PixKit server.');
+    } catch (err) {
+      console.error(err);
+      transcribeProgress.textContent = 'Local transcription failed. Try a shorter audio file or Chrome/Edge.';
+      setStatus('Could not transcribe this audio locally.', true);
+    } finally {
+      transcribeBtn.disabled = false;
+    }
+  }
+
   function populateVoices() {
     if (!voiceSel || !('speechSynthesis' in window)) return;
     const voices = window.speechSynthesis.getVoices();
@@ -206,6 +255,7 @@
 
   inputMode.addEventListener('change', updateInputMode);
   audioFile.addEventListener('change', () => loadAudioFile(audioFile.files[0]));
+  transcribeBtn.addEventListener('click', transcribeAudioLocally);
 
   output.addEventListener('change', () => {
     const audio = output.value === 'audio';
