@@ -1,8 +1,8 @@
-const CACHE_NAME = "pixkit-v20";
+const CACHE_NAME = "pixkit-v21";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=13",
+  "./styles.css?v=14",
   "./app1.js?v=13",
   "./app2.js?v=12",
   "./app3.js?v=8",
