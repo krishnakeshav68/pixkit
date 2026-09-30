@@ -179,6 +179,12 @@
   }
 
   function playStoryAudio() {
+    if (inputMode.value === 'audio') {
+      const file = audioFile && audioFile.files ? audioFile.files[0] : null;
+      if (!file) return setStatus('Please select an audio file first.', true);
+      audioPlayer.play().then(() => setStatus('Playing selected audio…')).catch(() => setStatus('Press Play on the audio player to listen.', true));
+      return;
+    }
     const value = text.value.trim();
     if (!value) return setStatus('Please enter a story first.', true);
     if (!('speechSynthesis' in window)) return setStatus('This browser does not support built-in audio narration.', true);
@@ -203,12 +209,12 @@
 
   output.addEventListener('change', () => {
     const audio = output.value === 'audio';
-    languageWrap.style.display = audio ? '' : 'none';
-    voiceWrap.style.display = audio ? '' : 'none';
+    const textNarration = audio && inputMode.value === 'text';
+    languageWrap.style.display = textNarration ? '' : 'none';
+    voiceWrap.style.display = textNarration ? '' : 'none';
     audioControls.style.display = audio ? '' : 'none';
-    scenesEl.style.display = audio ? 'none' : '';
-    bibleEl.style.display = audio ? 'none' : '';
-    if (audio) populateVoices();
+    scenesEl.style.display = output.value === 'text' && inputMode.value === 'text' ? '' : 'none';
+    if (textNarration) populateVoices();
     else if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   });
 
@@ -290,5 +296,5 @@
     } catch (_) {}
   });
   updateInputMode();
-  if (output.value === 'audio') { languageWrap.style.display = ''; voiceWrap.style.display = ''; }
+  output.dispatchEvent(new Event('change'));
 })();
