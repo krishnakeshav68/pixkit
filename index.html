@@ -175,9 +175,10 @@
   <section id="tab-story" role="tabpanel" aria-labelledby="tabBtnStory" style="display:none;">
     <div class="story-intro">
       <h2>Story → Text or Audio</h2>
-      <p>Choose what you have and what you want to produce.</p>
+      <p>Choose what you have, then choose what you want to produce.</p>
     </div>
-    <div class="story-options">
+
+    <div class="story-options story-choice-grid">
       <label><span class="label-small">I have</span>
         <select id="storyInputMode">
           <option value="text">Text story</option>
@@ -191,17 +192,20 @@
         </select>
       </label>
     </div>
-    <div id="storyTextInputWrap">
+
+    <div id="storyTextInputWrap" class="story-input-panel">
       <label class="story-field-label" for="storyText">Your story</label>
       <textarea id="storyText" class="story-textarea" rows="10" placeholder="Paste or type your story here..."></textarea>
     </div>
-    <div id="storyAudioFileWrap" style="display:none;">
+
+    <div id="storyAudioFileWrap" class="story-input-panel" style="display:none;">
       <label class="story-field-label" for="storyAudioFile">Choose audio file</label>
       <input id="storyAudioFile" type="file" accept="audio/*">
       <div id="storyAudioFileInfo" class="story-audio-note"></div>
       <audio id="storyAudioPlayer" controls preload="metadata" style="width:100%;margin-top:10px;display:none;"></audio>
     </div>
-    <div class="story-options">
+
+    <div class="story-options" style="margin-top:14px;">
       <label id="storyLanguageWrap" style="display:none;"><span class="label-small">Language</span>
         <select id="storyLanguage">
           <option value="auto">Auto detect</option>
@@ -211,7 +215,7 @@
         </select>
       </label>
       <label id="storyVoiceWrap" style="display:none;"><span class="label-small">Voice</span><select id="storyVoice"></select></label>
-      <label><span class="label-small">Visual style</span>
+      <label id="storyStyleWrap"><span class="label-small">Visual style</span>
         <select id="storyStyle">
           <option value="realistic cinematic">Realistic cinematic</option>
           <option value="photorealistic">Photorealistic</option>
@@ -219,7 +223,7 @@
           <option value="storybook realistic">Realistic storybook</option>
         </select>
       </label>
-      <label><span class="label-small">Scenes</span>
+      <label id="sceneCountWrap"><span class="label-small">Scenes</span>
         <select id="sceneCount">
           <option value="auto">Automatic</option>
           <option value="4">4 scenes</option>
@@ -228,6 +232,7 @@
         </select>
       </label>
     </div>
+
     <div id="storyAudioControls" style="display:none;margin-top:16px;">
       <div class="story-audio-actions">
         <button class="primary" id="storyPlayBtn" type="button">Play narration</button>
@@ -236,6 +241,7 @@
       </div>
       <div class="story-audio-note">Text stories use browser speech. Audio files use the selected recording directly.</div>
     </div>
+
     <button class="primary story-primary" id="buildStoryBtn">Create output</button>
     <div class="status" id="storyStatus"></div>
     <div id="storyBible" class="story-bible" aria-live="polite"></div>
