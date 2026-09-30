@@ -1,4 +1,4 @@
-const CACHE_NAME = "pixkit-v17";
+const CACHE_NAME = "pixkit-v18";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -33,7 +33,38 @@ self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
 
-  if (url.origin === self.location.origin || url.origin === "https://cdnjs.cloudflare.com") {
+  if (url.origin === self.location.origin) {
+    // Always prefer the network for HTML/navigation so deployments cannot
+    // leave users stuck on an older index.html.
+    if (event.request.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith("/index.html")) {
+      event.respondWith(
+        fetch(event.request).then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          }
+          return response;
+        }).catch(() => caches.match(event.request))
+      );
+      return;
+    }
+
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  if (url.origin === "https://cdnjs.cloudflare.com") {
     event.respondWith(
       caches.match(event.request).then(cached => {
         if (cached) return cached;
