@@ -232,7 +232,8 @@
       const anns = currentPage().annotations;
       let best = -1, bestDist = Infinity;
       anns.forEach((ann, index) => {
-        const d = Math.hypot(ann.x - point.x, ann.y - point.y);
+        let d = Math.hypot(ann.x - point.x, ann.y - point.y);
+        for (const p of (ann.points || [])) d = Math.min(d, Math.hypot(p.x - point.x, p.y - point.y));
         if (d < bestDist) {bestDist=d;best=index;}
       });
       if (best >= 0 && bestDist < 0.08) { anns.splice(best, 1); markDirty(); redrawAnnotations(); }
@@ -383,7 +384,7 @@
     // Rasterize only the annotation overlay at print-friendly resolution. The
     // original PDF page remains vector/text-based underneath, and this also
     // allows browser-supported scripts (such as Devanagari) to render.
-    for (let i = 0; i < pages.length; i++) {
+    for (let i = 0; i < exportIndexes.length; i++) {
       const annotations = pages[exportIndexes[i]].annotations;
       if (!annotations.length) continue;
       const page = result.getPages()[i];
