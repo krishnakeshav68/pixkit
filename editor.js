@@ -326,6 +326,8 @@
   $('editorMergeFiles').addEventListener('change', async () => {
     const files = Array.from($('editorMergeFiles').files || []);
     if (!files.length) return;
+    const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+    if (totalBytes > 150 * 1024 * 1024) return setStatus('The combined files exceed the 150 MB safety limit. Merge fewer or smaller PDFs.', true);
     try {
       setStatus('Merging PDFs locally…');
       const merged = await PDFDocument.create();
@@ -355,6 +357,7 @@
         if (start < 1 || end < start || end > pages.length) throw new Error('Page range must be between 1 and ' + pages.length);
         for (let n = start; n <= end; n++) selectedPages.add(n - 1);
       }
+      if (!selectedPages.size) throw new Error('Enter at least one valid page number or range');
       const indexes = Array.from(selectedPages).sort((a,b)=>a-b);
       await exportPageSubset(indexes, stem() + '-pages-' + raw.replace(/[^0-9,-]/g, '') + '.pdf');
       setStatus('Selected page range downloaded.');
