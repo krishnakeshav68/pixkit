@@ -18,6 +18,8 @@
 
   let pdfJsDoc = null;
   let originalBytes = null;
+  let formPdfDocument = null;
+  let formFields = [];
   let fileName = 'document.pdf';
   let pages = [];
   let selected = 0;
@@ -288,7 +290,7 @@
     currentPage().annotations.push({id: nextAnnotationId++, type: 'text', x: 0.08, y: 0.12, text: value, color: $('editorColor').value, size: Math.max(8, Number($('editorTextSize').value) || 18)});
     markDirty();
     redrawAnnotations();
-    setStatus('Text added near the top-left. Choose Select / move (coming in a later step) or use the tool again to add more.');
+    setStatus('Text added near the top-left. Choose Select / move to reposition it, or add more text.');
   });
   $('editorUndo').addEventListener('click', () => {
     if (!history.length) return;
@@ -324,6 +326,130 @@
     const bytes = await buildEditedPdf(indexes);
     downloadBytes(bytes, downloadName);
   }
+  const formFieldSelect = $('editorFormField');
+  const formFieldValue = $('editorFormFieldValue');
+  const formFieldHelp = document.createElement('p');
+  formFieldHelp.className = 'editor-hint';
+  formFieldHelp.id = 'editorFormFieldHelp';
+  $('editorFormTools').appendChild(formFieldHelp);
+
+  function selectedFormField() {
+    return formFields.find(field => field.getName() === formFieldSelect.value) || null;
+  }
+
+  function refreshFormFieldDetails() {
+    const field = selectedFormField();
+    if (!field) {
+      formFieldValue.value = '';
+      formFieldValue.placeholder = 'Choose a form field';
+      formFieldHelp.textContent = '';
+      return;
+    }
+    const type = field.constructor && field.constructor.name ? field.constructor.name : 'PDF field';
+    let current = '';
+    try {
+      if (typeof field.getText === 'function') current = field.getText() || '';
+      else if (typeof field.isChecked === 'function') current = field.isChecked() ? 'true' : 'false';
+      else if (typeof field.getSelected === 'function') current = field.getSelected() || '';
+      else if (typeof field.getSelectedOptions === 'function') current = (field.getSelectedOptions() || []).join(', ');
+    } catch (_) {}
+    formFieldValue.value = current;
+    if (typeof field.isChecked === 'function') formFieldValue.placeholder = 'true or false';
+    else formFieldValue.placeholder = 'Enter a value';
+    let options = [];
+    try {
+      if (typeof field.getOptions === 'function') options = field.getOptions() || [];
+    } catch (_) {}
+    formFieldHelp.textContent = type + (options.length ? ' — allowed options: ' + options.join(', ') : '') +
+      '. For checkboxes, enter true or false. For radio/dropdown fields, enter an exact available option.';
+  }
+
+  $('editorLoadFormFields').addEventListener('click', async () => {
+    if (!originalBytes) return setStatus('Choose a PDF first.', true);
+    const button = $('editorLoadFormFields');
+    button.disabled = true;
+    try {
+      setStatus('Reading fillable PDF form fields locally…');
+      formPdfDocument = await PDFDocument.load(originalBytes.slice(0));
+      const form = formPdfDocument.getForm();
+      formFields = form.getFields();
+      formFieldSelect.replaceChildren();
+      if (!formFields.length) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No fillable fields found';
+        formFieldSelect.appendChild(option);
+        formFieldSelect.disabled = true;
+        formFieldValue.disabled = true;
+        $('editorApplyFormValue').disabled = true;
+        $('editorSaveFormPdf').disabled = true;
+        formFieldHelp.textContent = 'This PDF does not expose standard AcroForm fields. You can still add text overlays or a signature on the page.';
+        setStatus('No standard fillable fields were found. You can still add text and signatures as overlays.');
+        return;
+      }
+      formFields.forEach(field => {
+        const option = document.createElement('option');
+        option.value = field.getName();
+        option.textContent = field.getName() + ' (' + (field.constructor && field.constructor.name ? field.constructor.name.replace(/^PDF/, '') : 'Field') + ')';
+        formFieldSelect.appendChild(option);
+      });
+      formFieldSelect.disabled = false;
+      formFieldValue.disabled = false;
+      $('editorApplyFormValue').disabled = false;
+      $('editorSaveFormPdf').disabled = false;
+      refreshFormFieldDetails();
+      setStatus('Found ' + formFields.length + ' fillable form field' + (formFields.length === 1 ? '' : 's') + '. Set values, then download the filled form PDF.');
+    } catch (err) {
+      formPdfDocument = null;
+      formFields = [];
+      handleError(err);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  formFieldSelect.addEventListener('change', refreshFormFieldDetails);
+
+  $('editorApplyFormValue').addEventListener('click', () => {
+    const field = selectedFormField();
+    if (!formPdfDocument || !field) return setStatus('Load fillable form fields and choose a field first.', true);
+    const value = formFieldValue.value;
+    try {
+      if (typeof field.setText === 'function') {
+        field.setText(value);
+      } else if (typeof field.check === 'function' && typeof field.uncheck === 'function') {
+        if (/^(true|yes|1|checked)$/i.test(value.trim())) field.check();
+        else if (/^(false|no|0|unchecked|)$/i.test(value.trim())) field.uncheck();
+        else throw new Error('Enter true or false for this checkbox.');
+      } else if (typeof field.select === 'function') {
+        field.select(value.trim());
+      } else {
+        throw new Error('This field type cannot be filled by this editor yet.');
+      }
+      refreshFormFieldDetails();
+      $('editorSaveFormPdf').disabled = false;
+      setStatus('Field value applied locally. Download the filled form PDF to save it.');
+    } catch (err) {
+      setStatus((err && err.message) || 'Could not set this form field value.', true);
+    }
+  });
+
+  $('editorSaveFormPdf').addEventListener('click', async () => {
+    if (!formPdfDocument) return setStatus('Load fillable form fields and apply values first.', true);
+    const button = $('editorSaveFormPdf');
+    button.disabled = true;
+    try {
+      setStatus('Preparing filled form PDF…');
+      const bytes = await formPdfDocument.save();
+      downloadBytes(bytes, stem() + '-filled-form.pdf');
+      setStatus('Filled form PDF downloaded. This export contains the form-field changes; export page and annotation edits separately if needed.');
+    } catch (err) {
+      handleError(err);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
   $('editorMergeOpen').addEventListener('click', () => $('editorMergeFiles').click());
   $('editorMergeFiles').addEventListener('change', async () => {
     const files = Array.from($('editorMergeFiles').files || []);
@@ -463,6 +589,15 @@
       setStatus('Loading PDF locally…');
       fileName = file.name || 'document.pdf';
       originalBytes = await file.arrayBuffer();
+      formPdfDocument = null;
+      formFields = [];
+      $('editorFormField').replaceChildren(new Option('Load fields first', ''));
+      $('editorFormField').disabled = true;
+      $('editorFormFieldValue').value = '';
+      $('editorFormFieldValue').disabled = true;
+      $('editorApplyFormValue').disabled = true;
+      $('editorSaveFormPdf').disabled = true;
+      $('editorFormFieldHelp').textContent = '';
       pdfJsDoc = await pdfjsLib.getDocument({data: originalBytes.slice(0)}).promise;
       const count = pdfJsDoc.numPages;
       pages = Array.from({length: count}, (_, index) => ({sourceIndex: index, rotation: 0, annotations: []}));
