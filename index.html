@@ -50,6 +50,7 @@
 <link rel="stylesheet" href="styles.css?v=14">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
 </head>
 <body>
@@ -74,6 +75,7 @@
   <div class="tabs" role="tablist" aria-label="PixKit tools">
     <button class="tab active" id="tabBtnPdf" role="tab" tabindex="0" data-tab="pdf" aria-controls="tab-pdf" aria-selected="true"><span>Image → PDF</span><small>Combine multiple photos into one PDF</small></button>
     <button class="tab" id="tabBtnCompress" role="tab" tabindex="-1" data-tab="compress" aria-controls="tab-compress" aria-selected="false"><span>Compress Image</span><small>Reduce image size for sharing or forms</small></button>
+    <button class="tab" id="tabBtnEditor" role="tab" tabindex="-1" data-tab="editor" aria-controls="tab-editor" aria-selected="false"><span>PDF Editor</span><small>Edit, organize, annotate and sign PDFs</small></button>
     <button class="tab" id="tabBtnStory" role="tab" tabindex="-1" data-tab="story" aria-controls="tab-story" aria-selected="false"><span>Story → Scenes</span><small>Plan visuals from your story</small></button>
     <button class="tab" id="tabBtnPdfCompress" role="tab" tabindex="-1" data-tab="pdf-compress" aria-controls="tab-pdf-compress" aria-selected="false"><span>Compress PDF</span><small>Make large PDFs smaller and easier to share</small></button>
   </div>
@@ -171,6 +173,69 @@
     </div>
   </section>
 </div>
+
+  <section id="tab-editor" role="tabpanel" aria-labelledby="tabBtnEditor" style="display:none;">
+    <div class="editor-intro">
+      <h2>PDF Editor</h2>
+      <p>Organize pages, add notes or signatures, and export an edited PDF. Processing runs in this browser.</p>
+    </div>
+    <div class="editor-upload-row">
+      <label class="drop editor-drop" id="editorDrop" for="editorFile">
+        <div class="big">Choose a PDF to edit</div>
+        <div class="small">PDF files are processed locally on this device</div>
+      </label>
+      <input id="editorFile" type="file" accept="application/pdf,.pdf" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;">
+    </div>
+    <div class="editor-toolbar" id="editorToolbar" style="display:none;">
+      <div class="editor-toolbar-row">
+        <button type="button" class="secondary-action editor-small-btn" id="editorRotateLeft">Rotate left</button>
+        <button type="button" class="secondary-action editor-small-btn" id="editorRotateRight">Rotate right</button>
+        <button type="button" class="secondary-action editor-small-btn" id="editorDeletePage">Delete page</button>
+        <button type="button" class="secondary-action editor-small-btn" id="editorExtractPage">Download selected page</button>
+      </div>
+      <div class="editor-toolbar-row">
+        <label class="editor-control">Tool
+          <select id="editorTool">
+            <option value="select">Select / move</option>
+            <option value="text">Add text</option>
+            <option value="pen">Draw</option>
+            <option value="highlight">Highlight</option>
+            <option value="signature">Signature</option>
+            <option value="erase">Remove annotation</option>
+          </select>
+        </label>
+        <label class="editor-control">Color <input type="color" id="editorColor" value="#d62828"></label>
+        <label class="editor-control">Text size <input type="number" id="editorTextSize" value="18" min="8" max="72"></label>
+        <button type="button" class="secondary-action editor-small-btn" id="editorUndo">Undo</button>
+        <button type="button" class="secondary-action editor-small-btn" id="editorClearPage">Clear page annotations</button>
+      </div>
+      <div class="editor-toolbar-row">
+        <label class="editor-control">Text / signature <input id="editorTextInput" type="text" maxlength="300" placeholder="Enter text or your signature"></label>
+        <button type="button" class="secondary-action editor-small-btn" id="editorAddText">Add text at center</button>
+        <button type="button" class="secondary-action editor-small-btn" id="editorSave">Download edited PDF</button>
+      </div>
+      <p class="editor-hint">Tap a page thumbnail to select it. Drag thumbnails to reorder pages. Add text by selecting Add text or clicking the page with the Text tool. For a signature, choose Signature, enter the name above, then click the page. Original embedded text is not rewritten by this first version; annotations are added on top.</p>
+    </div>
+    <div id="editorStatus" class="status" role="status" aria-live="polite">Choose a PDF to begin.</div>
+    <div id="editorWorkspace" class="editor-workspace" style="display:none;">
+      <aside class="editor-sidebar">
+        <h3>Pages <span id="editorPageCount"></span></h3>
+        <div id="editorThumbnails" class="editor-thumbnails"></div>
+        <button type="button" class="secondary-action" id="editorDuplicatePage">Duplicate page</button>
+      </aside>
+      <div class="editor-main">
+        <div class="editor-page-meta"><span id="editorCurrentPage"></span><span id="editorZoomInfo">Preview</span></div>
+        <div id="editorCanvasWrap" class="editor-canvas-wrap">
+          <canvas id="editorPageCanvas" aria-label="PDF page preview"></canvas>
+          <canvas id="editorOverlayCanvas" aria-label="PDF annotation layer"></canvas>
+        </div>
+        <div class="editor-navigation">
+          <button type="button" class="secondary-action" id="editorPrev">Previous page</button>
+          <button type="button" class="secondary-action" id="editorNext">Next page</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section id="tab-story" role="tabpanel" aria-labelledby="tabBtnStory" style="display:none;">
     <div class="story-intro">
@@ -285,6 +350,8 @@
 <script src="app2.js?v=12"></script>
 <script src="app3.js?v=8"></script>
 <script src="story.js?v=15"></script>
+<link rel="stylesheet" href="editor.css?v=1">
+<script src="editor.js?v=1"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -302,13 +369,15 @@ if ("serviceWorker" in navigator) {
     pdf: document.getElementById('tabBtnPdf'),
     compress: document.getElementById('tabBtnCompress'),
     pdfCompress: document.getElementById('tabBtnPdfCompress'),
-    story: document.getElementById('tabBtnStory')
+    story: document.getElementById('tabBtnStory'),
+    editor: document.getElementById('tabBtnEditor')
   };
   const panels = {
     pdf: document.getElementById('tab-pdf'),
     compress: document.getElementById('tab-compress'),
     pdfCompress: document.getElementById('tab-pdf-compress'),
-    story: document.getElementById('tab-story')
+    story: document.getElementById('tab-story'),
+    editor: document.getElementById('tab-editor')
   };
 
   function setActiveTab(name) {
@@ -330,6 +399,7 @@ if ("serviceWorker" in navigator) {
     else if (button === buttons.compress) setActiveTab('compress');
     else if (button === buttons.pdfCompress) setActiveTab('pdfCompress');
     else if (button === buttons.story) setActiveTab('story');
+    else if (button === buttons.editor) setActiveTab('editor');
   }, true);
 
   setActiveTab('pdf');
