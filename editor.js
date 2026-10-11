@@ -113,7 +113,8 @@
       });
       thumbs.appendChild(button);
       try {
-        await renderPdfPage(pdfJsDoc, page.sourceIndex + 1, mini, 170, 220, page.rotation);
+        const thumbnailWidth = Math.max(70, button.clientWidth - 14);
+        await renderPdfPage(pdfJsDoc, page.sourceIndex + 1, mini, thumbnailWidth, 220, page.rotation);
   
       } catch (_) {
         const fallback = document.createElement('span');
@@ -123,7 +124,8 @@
     }
 
     const selectedPage = currentPage();
-    await renderPdfPage(pdfJsDoc, selectedPage.sourceIndex + 1, pageCanvas, 950, 1100, selectedPage.rotation);
+    const availableWidth = Math.max(240, Math.min(950, $('editorCanvasWrap').clientWidth - 20));
+    await renderPdfPage(pdfJsDoc, selectedPage.sourceIndex + 1, pageCanvas, availableWidth, 1100, selectedPage.rotation);
 
     overlayCanvas.width = pageCanvas.width;
     overlayCanvas.height = pageCanvas.height;
