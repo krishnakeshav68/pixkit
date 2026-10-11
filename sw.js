@@ -9,7 +9,7 @@ const APP_SHELL = [
   "./story.js?v=15",
   "./editor.css?v=1",
   "./editor.js?v=1",
-  "https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js",
   "./favicon.svg",
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
