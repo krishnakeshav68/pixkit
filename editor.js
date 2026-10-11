@@ -333,60 +333,55 @@
       const pdfPage = copied[i];
       const sourcePage = pages[i];
       result.addPage(pdfPage);
-      if (sourcePage.rotation) pdfPage.setRotation(degrees((pdfPage.getRotation().angle + sourcePage.rotation + 360) % 360));
-    }
-    const font = await result.embedFont(StandardFonts.Helvetica);
-    for (let i = 0; i < pages.length; i++) {
-      const page = result.getPages()[i];
-      const size = page.getSize();
-      for (const ann of pages[i].annotations) {
-        const color = hexRgb(ann.color);
-        const x = ann.x * size.width;
-        const y = size.height - ann.y * size.height;
-        if (ann.type === 'text' || ann.type === 'signature') {
-          const textValue = String(ann.text || '');
-          const sizePt = Math.max(8, Number(ann.size) || 18);
-          if (/[^ -~]/.test(textValue)) {
-            // Browser-rasterized fallback preserves scripts unavailable in Standard Helvetica (e.g. Hindi).
-            const scale = 3;
-            const textCanvas = document.createElement('canvas');
-            const textCtx = textCanvas.getContext('2d');
-            const fontSpec = (ann.type === 'signature' ? 'italic ' : '') + (sizePt * scale) + 'px Arial, sans-serif';
-            textCtx.font = fontSpec;
-            const metrics = textCtx.measureText(textValue);
-            textCanvas.width = Math.max(12, Math.ceil(metrics.width + sizePt * scale));
-            textCanvas.height = Math.max(20, Math.ceil(sizePt * scale * 1.8));
-            const drawCtx = textCanvas.getContext('2d');
-            drawCtx.font = fontSpec;
-            drawCtx.fillStyle = ann.color || '#211D2E';
-            drawCtx.textBaseline = 'alphabetic';
-            drawCtx.fillText(textValue, sizePt * scale / 2, sizePt * scale * 1.2);
-            const image = await result.embedPng(textCanvas.toDataURL('image/png'));
-            const imageWidth = textCanvas.width / scale;
-            const imageHeight = textCanvas.height / scale;
-            page.drawImage(image, {x, y: y - sizePt * 1.2, width: imageWidth, height: imageHeight});
-          } else {
-            page.drawText(textValue, {x, y, size: sizePt, font, color: rgb(color.r, color.g, color.b), opacity: 1});
-          }
-        } else if (ann.type === 'pen' || ann.type === 'highlight') {
-          const points = ann.points || [];
-          for (let p = 1; p < points.length; p++) {
-            const a = points[p - 1], b = points[p];
-            page.drawLine({
-              start: {x: a.x * size.width, y: size.height - a.y * size.height},
-              end: {x: b.x * size.width, y: size.height - b.y * size.height},
-              thickness: ann.type === 'highlight' ? Math.max(8, Number(ann.size) || 20) : Math.max(1, Number(ann.size) || 2),
-              color: ann.type === 'highlight' ? rgb(1, 0.9, 0.05) : rgb(color.r, color.g, color.b),
-              opacity: ann.type === 'highlight' ? 0.28 : 1
-            });
-          }
-        }
+      if (sourcePage.rotation) {
+        pdfPage.setRotation(degrees((pdfPage.getRotation().angle + sourcePage.rotation + 360) % 360));
       }
     }
+
+    // Rasterize only the annotation overlay at print-friendly resolution. The
+    // original PDF page remains vector/text-based underneath, and this also
+    // allows browser-supported scripts (such as Devanagari) to render.
+    for (let i = 0; i < pages.length; i++) {
+      const annotations = pages[i].annotations;
+      if (!annotations.length) continue;
+      const page = result.getPages()[i];
+      const size = page.getSize();
+      const rotation = ((page.getRotation().angle % 360) + 360) % 360;
+      const sideways = rotation === 90 || rotation === 270;
+      const displayWidth = sideways ? size.height : size.width;
+      const displayHeight = sideways ? size.width : size.height;
+      const scale = Math.max(0.75, Math.min(2, 1800 / Math.max(displayWidth, displayHeight)));
+      const displayCanvas = document.createElement('canvas');
+      displayCanvas.width = Math.max(1, Math.round(displayWidth * scale));
+      displayCanvas.height = Math.max(1, Math.round(displayHeight * scale));
+      const displayCtx = displayCanvas.getContext('2d');
+      for (const ann of annotations) {
+        drawAnnotation(displayCtx, ann, displayCanvas.width, displayCanvas.height);
+      }
+
+      const rawCanvas = document.createElement('canvas');
+      rawCanvas.width = Math.max(1, Math.round(size.width * scale));
+      rawCanvas.height = Math.max(1, Math.round(size.height * scale));
+      const rawCtx = rawCanvas.getContext('2d');
+      if (rotation === 90) {
+        rawCtx.translate(0, rawCanvas.height);
+        rawCtx.rotate(-Math.PI / 2);
+      } else if (rotation === 180) {
+        rawCtx.translate(rawCanvas.width, rawCanvas.height);
+        rawCtx.rotate(Math.PI);
+      } else if (rotation === 270) {
+        rawCtx.translate(rawCanvas.width, 0);
+        rawCtx.rotate(Math.PI / 2);
+      }
+      rawCtx.drawImage(displayCanvas, 0, 0);
+      const overlayImage = await result.embedPng(rawCanvas.toDataURL('image/png'));
+      page.drawImage(overlayImage, { x: 0, y: 0, width: size.width, height: size.height });
+    }
+
     const bytes = await result.save();
     downloadBytes(bytes, stem() + '-edited.pdf');
     isDirty = false;
-    setStatus('Edited PDF downloaded. Existing text has not been rewritten; page changes and annotations were exported.');
+    setStatus('Edited PDF downloaded. Original page content is preserved; added annotations are flattened into a high-resolution overlay.');
   }
   $('editorSave').addEventListener('click', async () => {
     try { setStatus('Preparing edited PDF…'); $('editorSave').disabled = true; await exportEditedPdf(); }
