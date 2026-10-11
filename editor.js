@@ -24,6 +24,8 @@
   let nextAnnotationId = 1;
   let activePointer = null;
   let drawingAnnotation = null;
+  let movingAnnotation = null;
+  let movementOrigin = null;
   let isDirty = false;
   const history = [];
 
@@ -187,7 +189,29 @@
     if (!currentPage()) return;
     const tool = $('editorTool').value;
     const point = pointerPosition(event);
-    if (tool === 'select') return;
+    if (tool === 'select') {
+      const annotations = currentPage().annotations;
+      let best = null;
+      let bestDistance = Infinity;
+      for (let i = annotations.length - 1; i >= 0; i--) {
+        const ann = annotations[i];
+        let distance = Math.hypot(ann.x - point.x, ann.y - point.y);
+        for (const p of (ann.points || [])) distance = Math.min(distance, Math.hypot(p.x - point.x, p.y - point.y));
+        if (distance < bestDistance) { bestDistance = distance; best = ann; }
+      }
+      if (!best || bestDistance > 0.075) return;
+      event.preventDefault();
+      overlayCanvas.setPointerCapture(event.pointerId);
+      pushHistory();
+      movingAnnotation = best;
+      movementOrigin = {
+        x: point.x, y: point.y, annX: best.x, annY: best.y,
+        points: (best.points || []).map(p => ({x:p.x,y:p.y}))
+      };
+      activePointer = event.pointerId;
+      setStatus('Drag to move the selected annotation.');
+      return;
+    }
     event.preventDefault();
     overlayCanvas.setPointerCapture(event.pointerId);
     pushHistory();
@@ -216,14 +240,36 @@
     }
   });
   overlayCanvas.addEventListener('pointermove', event => {
-    if (activePointer !== event.pointerId || !drawingAnnotation) return;
+    if (activePointer !== event.pointerId) return;
     const point = pointerPosition(event);
+    if (movingAnnotation && movementOrigin) {
+      const dx = point.x - movementOrigin.x;
+      const dy = point.y - movementOrigin.y;
+      movingAnnotation.x = Math.min(1, Math.max(0, movementOrigin.annX + dx));
+      movingAnnotation.y = Math.min(1, Math.max(0, movementOrigin.annY + dy));
+      if (movingAnnotation.points) {
+        movingAnnotation.points = movementOrigin.points.map(p => ({
+          x: Math.min(1, Math.max(0, p.x + dx)),
+          y: Math.min(1, Math.max(0, p.y + dy))
+        }));
+      }
+      redrawAnnotations();
+      return;
+    }
+    if (!drawingAnnotation) return;
     drawingAnnotation.points.push(point);
     redrawAnnotations();
   });
   function endDrawing(event) {
     if (activePointer !== event.pointerId) return;
     activePointer = null;
+    if (movingAnnotation) {
+      movingAnnotation = null;
+      movementOrigin = null;
+      markDirty();
+      setStatus('Annotation moved. Download the PDF to save your changes.');
+      return;
+    }
     drawingAnnotation = null;
     markDirty();
     setStatus('Annotation added. Download the PDF to save your changes.');
