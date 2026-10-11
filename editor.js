@@ -328,10 +328,7 @@
   }
   const formFieldSelect = $('editorFormField');
   const formFieldValue = $('editorFormFieldValue');
-  const formFieldHelp = document.createElement('p');
-  formFieldHelp.className = 'editor-hint';
-  formFieldHelp.id = 'editorFormFieldHelp';
-  $('editorFormTools').appendChild(formFieldHelp);
+  const formFieldHelp = $('editorFormFieldHelp');
 
   function selectedFormField() {
     return formFields.find(field => field.getName() === formFieldSelect.value) || null;
