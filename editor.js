@@ -280,6 +280,45 @@
     copied.forEach((p, i) => { target.addPage(p); const pg = pages[indexes[i]]; if (pg.rotation) p.setRotation(degrees((p.getRotation().angle + pg.rotation + 360) % 360)); });
     downloadBytes(await target.save(), downloadName);
   }
+  $('editorMergeOpen').addEventListener('click', () => $('editorMergeFiles').click());
+  $('editorMergeFiles').addEventListener('change', async () => {
+    const files = Array.from($('editorMergeFiles').files || []);
+    if (!files.length) return;
+    try {
+      setStatus('Merging PDFs locally…');
+      const merged = await PDFDocument.create();
+      for (const file of files) {
+        if (file.size > 150 * 1024 * 1024) throw new Error(file.name + ' exceeds the 150 MB safety limit');
+        const source = await PDFDocument.load(await file.arrayBuffer());
+        const copied = await merged.copyPages(source, source.getPageIndices());
+        copied.forEach(page => merged.addPage(page));
+      }
+      const bytes = await merged.save();
+      downloadBytes(bytes, 'merged-pdfs.pdf');
+      setStatus(files.length + ' PDFs merged and downloaded locally.');
+    } catch (err) { handleError(err); }
+    finally { $('editorMergeFiles').value = ''; }
+  });
+
+  $('editorSplitRangeBtn').addEventListener('click', async () => {
+    if (!originalBytes || !pages.length) return setStatus('Choose a PDF first.', true);
+    const raw = $('editorSplitRange').value.trim();
+    if (!raw) return setStatus('Enter a page range, for example 1-3, 5.', true);
+    try {
+      const selectedPages = new Set();
+      for (const token of raw.split(',').map(s => s.trim()).filter(Boolean)) {
+        const match = token.match(/^(\d+)(?:\s*-\s*(\d+))?$/);
+        if (!match) throw new Error('Invalid range: ' + token);
+        const start = Number(match[1]), end = Number(match[2] || match[1]);
+        if (start < 1 || end < start || end > pages.length) throw new Error('Page range must be between 1 and ' + pages.length);
+        for (let n = start; n <= end; n++) selectedPages.add(n - 1);
+      }
+      const indexes = Array.from(selectedPages).sort((a,b)=>a-b);
+      await exportPageSubset(indexes, stem() + '-pages-' + raw.replace(/[^0-9,-]/g, '') + '.pdf');
+      setStatus('Selected page range downloaded.');
+    } catch (err) { handleError(err); }
+  });
+
   $('editorExtractPage').addEventListener('click', async () => {
     try { await exportPageSubset([selected], stem() + '-page-' + (selected + 1) + '.pdf'); setStatus('Selected page downloaded.'); }
     catch (err) { handleError(err); }
