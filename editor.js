@@ -344,8 +344,30 @@
         const x = ann.x * size.width;
         const y = size.height - ann.y * size.height;
         if (ann.type === 'text' || ann.type === 'signature') {
-          const safeText = String(ann.text || '').replace(/[^\x20-\x7E]/g, '?');
-          page.drawText(safeText, {x, y, size: Math.max(8, Number(ann.size) || 18), font, color: rgb(color.r, color.g, color.b), opacity: 1});
+          const textValue = String(ann.text || '');
+          const sizePt = Math.max(8, Number(ann.size) || 18);
+          if (/[^ -~]/.test(textValue)) {
+            // Browser-rasterized fallback preserves scripts unavailable in Standard Helvetica (e.g. Hindi).
+            const scale = 3;
+            const textCanvas = document.createElement('canvas');
+            const textCtx = textCanvas.getContext('2d');
+            const fontSpec = (ann.type === 'signature' ? 'italic ' : '') + (sizePt * scale) + 'px Arial, sans-serif';
+            textCtx.font = fontSpec;
+            const metrics = textCtx.measureText(textValue);
+            textCanvas.width = Math.max(12, Math.ceil(metrics.width + sizePt * scale));
+            textCanvas.height = Math.max(20, Math.ceil(sizePt * scale * 1.8));
+            const drawCtx = textCanvas.getContext('2d');
+            drawCtx.font = fontSpec;
+            drawCtx.fillStyle = ann.color || '#211D2E';
+            drawCtx.textBaseline = 'alphabetic';
+            drawCtx.fillText(textValue, sizePt * scale / 2, sizePt * scale * 1.2);
+            const image = await result.embedPng(textCanvas.toDataURL('image/png'));
+            const imageWidth = textCanvas.width / scale;
+            const imageHeight = textCanvas.height / scale;
+            page.drawImage(image, {x, y: y - sizePt * 1.2, width: imageWidth, height: imageHeight});
+          } else {
+            page.drawText(textValue, {x, y, size: sizePt, font, color: rgb(color.r, color.g, color.b), opacity: 1});
+          }
         } else if (ann.type === 'pen' || ann.type === 'highlight') {
           const points = ann.points || [];
           for (let p = 1; p < points.length; p++) {
