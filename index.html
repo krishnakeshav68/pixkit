@@ -220,7 +220,19 @@
         <label class="editor-control">Split / extract page range <input id="editorSplitRange" type="text" placeholder="e.g. 1-3, 5"></label>
         <button type="button" class="secondary-action editor-small-btn" id="editorSplitRangeBtn">Download range</button>
       </div>
-      <p class="editor-hint">Tap a page thumbnail to select it. Drag thumbnails to reorder pages. Add text by selecting Add text or clicking the page with the Text tool. For a signature, choose Signature, enter the name above, then click the page. Original embedded text is not rewritten by this first version; annotations are added on top.</p>
+      <div class="editor-toolbar-row editor-form-tools" id="editorFormTools">
+        <button type="button" class="secondary-action editor-small-btn" id="editorLoadFormFields">Load fillable form fields</button>
+        <label class="editor-control">Form field
+          <select id="editorFormField" disabled><option value="">Load fields first</option></select>
+        </label>
+        <label class="editor-control">Field value
+          <input id="editorFormFieldValue" type="text" placeholder="Text, option, or true/false" disabled>
+        </label>
+        <button type="button" class="secondary-action editor-small-btn" id="editorApplyFormValue" disabled>Apply value</button>
+        <button type="button" class="secondary-action editor-small-btn" id="editorSaveFormPdf" disabled>Download filled form PDF</button>
+      </div>
+      <p class="editor-hint">Form filling supports standard text fields, checkboxes, radio buttons, and dropdowns where the PDF exposes AcroForm fields. Form-filled export preserves the source page structure and does not include separate page/annotation edits. Original embedded text is not rewritten; added annotations are overlays.</p>
+      <p class="editor-hint">Tap a page thumbnail to select it. Drag thumbnails to reorder pages. Choose Text or Signature, enter the value above, then click the page; use Select / move to reposition annotations. Draw and highlight directly on the page. Export annotations with Download edited PDF.</p>
     </div>
     <div id="editorStatus" class="status" role="status" aria-live="polite">Choose a PDF to begin.</div>
     <div id="editorWorkspace" class="editor-workspace" style="display:none;">
