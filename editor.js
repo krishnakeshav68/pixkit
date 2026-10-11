@@ -72,8 +72,7 @@
     toolbar.style.display = '';
     $('editorPageCount').textContent = pages.length;
     $('editorCurrentPage').textContent = 'Page ' + (selected + 1) + ' of ' + pages.length;
-    $('editorAddText').textContent = 'Add text at center';
-    $('editorPrev').disabled = selected === 0;
+        $('editorPrev').disabled = selected === 0;
     $('editorNext').disabled = selected === pages.length - 1;
     $('editorDeletePage').disabled = pages.length <= 1;
     $('editorExtractPage').disabled = false;
