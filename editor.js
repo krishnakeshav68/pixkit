@@ -318,13 +318,8 @@
   $('editorNext').addEventListener('click', () => { if (selected < pages.length - 1) { selected++; renderAll().catch(handleError); } });
 
   async function exportPageSubset(indexes, downloadName) {
-    const bytes = originalBytes.slice(0);
-    const pdf = await PDFDocument.load(bytes);
-    const target = await PDFDocument.create();
-    const indices = indexes.map(i => pages[i].sourceIndex);
-    const copied = await target.copyPages(pdf, indices);
-    copied.forEach((p, i) => { target.addPage(p); const pg = pages[indexes[i]]; if (pg.rotation) p.setRotation(degrees((p.getRotation().angle + pg.rotation + 360) % 360)); });
-    downloadBytes(await target.save(), downloadName);
+    const bytes = await buildEditedPdf(indexes);
+    downloadBytes(bytes, downloadName);
   }
   $('editorMergeOpen').addEventListener('click', () => $('editorMergeFiles').click());
   $('editorMergeFiles').addEventListener('change', async () => {
@@ -370,14 +365,15 @@
     catch (err) { handleError(err); }
   });
 
-  async function exportEditedPdf() {
-    if (!pages.length) return;
+  async function buildEditedPdf(indexes) {
+    if (!pages.length) throw new Error('No PDF is loaded');
+    const exportIndexes = Array.isArray(indexes) ? indexes : pages.map((_, index) => index);
     const source = await PDFDocument.load(originalBytes.slice(0));
     const result = await PDFDocument.create();
-    const copied = await result.copyPages(source, pages.map(p => p.sourceIndex));
+    const copied = await result.copyPages(source, exportIndexes.map(index => pages[index].sourceIndex));
     for (let i = 0; i < copied.length; i++) {
       const pdfPage = copied[i];
-      const sourcePage = pages[i];
+      const sourcePage = pages[exportIndexes[i]];
       result.addPage(pdfPage);
       if (sourcePage.rotation) {
         pdfPage.setRotation(degrees((pdfPage.getRotation().angle + sourcePage.rotation + 360) % 360));
@@ -388,7 +384,7 @@
     // original PDF page remains vector/text-based underneath, and this also
     // allows browser-supported scripts (such as Devanagari) to render.
     for (let i = 0; i < pages.length; i++) {
-      const annotations = pages[i].annotations;
+      const annotations = pages[exportIndexes[i]].annotations;
       if (!annotations.length) continue;
       const page = result.getPages()[i];
       const size = page.getSize();
@@ -424,7 +420,11 @@
       page.drawImage(overlayImage, { x: 0, y: 0, width: size.width, height: size.height });
     }
 
-    const bytes = await result.save();
+    return await result.save();
+  }
+
+  async function exportEditedPdf() {
+    const bytes = await buildEditedPdf();
     downloadBytes(bytes, stem() + '-edited.pdf');
     isDirty = false;
     setStatus('Edited PDF downloaded. Original page content is preserved; added annotations are flattened into a high-resolution overlay.');
