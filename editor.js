@@ -35,11 +35,12 @@
   function currentPage() { return pages[selected]; }
   function markDirty() { isDirty = true; }
 
-  async function renderPdfPage(pdfDoc, pageNumber, canvas, maxWidth, maxHeight) {
+  async function renderPdfPage(pdfDoc, pageNumber, canvas, maxWidth, maxHeight, extraRotation) {
     const page = await pdfDoc.getPage(pageNumber);
-    const viewport0 = page.getViewport({ scale: 1, rotation: page.rotate || 0 });
+    const rotation = ((page.rotate || 0) + (extraRotation || 0) + 360) % 360;
+    const viewport0 = page.getViewport({ scale: 1, rotation });
     const scale = Math.min(maxWidth / viewport0.width, maxHeight / viewport0.height, 1.55);
-    const viewport = page.getViewport({ scale: Math.max(0.25, scale), rotation: page.rotate || 0 });
+    const viewport = page.getViewport({ scale: Math.max(0.25, scale), rotation });
     const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
     canvas.width = Math.round(viewport.width * dpr);
     canvas.height = Math.round(viewport.height * dpr);
@@ -71,6 +72,7 @@
     toolbar.style.display = '';
     $('editorPageCount').textContent = pages.length;
     $('editorCurrentPage').textContent = 'Page ' + (selected + 1) + ' of ' + pages.length;
+    $('editorAddText').textContent = 'Add text at center';
     $('editorPrev').disabled = selected === 0;
     $('editorNext').disabled = selected === pages.length - 1;
     $('editorDeletePage').disabled = pages.length <= 1;
@@ -110,11 +112,8 @@
       });
       thumbs.appendChild(button);
       try {
-        await renderPdfPage(pdfJsDoc, page.sourceIndex + 1, mini, 170, 220);
-        if (page.rotation) {
-          mini.style.transform = 'rotate(' + page.rotation + 'deg)';
-          mini.style.transformOrigin = 'center';
-        }
+        await renderPdfPage(pdfJsDoc, page.sourceIndex + 1, mini, 170, 220, page.rotation);
+  
       } catch (_) {
         const fallback = document.createElement('span');
         fallback.textContent = 'Preview unavailable';
@@ -123,13 +122,8 @@
     }
 
     const selectedPage = currentPage();
-    await renderPdfPage(pdfJsDoc, selectedPage.sourceIndex + 1, pageCanvas, 950, 1100);
-    if (selectedPage.rotation) {
-      pageCanvas.style.transform = 'rotate(' + selectedPage.rotation + 'deg)';
-      pageCanvas.style.transformOrigin = 'center';
-    } else {
-      pageCanvas.style.transform = '';
-    }
+    await renderPdfPage(pdfJsDoc, selectedPage.sourceIndex + 1, pageCanvas, 950, 1100, selectedPage.rotation);
+
     overlayCanvas.width = pageCanvas.width;
     overlayCanvas.height = pageCanvas.height;
     overlayCanvas.style.width = pageCanvas.style.width;
